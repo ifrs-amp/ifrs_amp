@@ -1,0 +1,2388 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Database Staf</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg: #F1F4F3;
+    --paper: #FFFFFF;
+    --ink: #16302E;
+    --ink-soft: #4B615F;
+    --teal: #123F3E;
+    --teal-2: #1E5B58;
+    --amber: #B8863B;
+    --amber-soft: #F1E4CB;
+    --line: #DCE3E1;
+    --danger: #A8453A;
+    --danger-soft: #F5E1DE;
+    --ok: #3F7A5C;
+    --ok-soft: #E1EEE5;
+    --radius: 10px;
+    --shadow: 0 1px 2px rgba(18,63,62,0.06), 0 6px 20px rgba(18,63,62,0.06);
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--ink);
+    font-family:'Inter',sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  ::selection{ background:var(--amber-soft); }
+  .wrap{ max-width:1180px; margin:0 auto; padding:28px 20px 80px; }
+
+  .home-link{
+    background:none; border:none; color:var(--ink-soft); font-size:12px; font-weight:600;
+    padding:0 0 8px; cursor:pointer; letter-spacing:.02em;
+  }
+  .home-link:hover{ color:var(--teal-2); }
+
+  /* Landing page */
+  .landing-wrap{ max-width:1180px; margin:0 auto; padding:0 20px 60px; }
+  .hero{
+    position:relative; overflow:hidden; border-radius:20px; margin:20px 0 32px;
+    background:radial-gradient(circle at 20% 20%, #1C5D5A 0%, var(--teal) 55%, #0B302F 100%);
+    padding:56px 32px 44px; text-align:center; color:#fff;
+    box-shadow:0 20px 50px rgba(15,45,44,0.25);
+  }
+  .hero::before{
+    content:""; position:absolute; inset:0; opacity:.16; pointer-events:none;
+    background-image:radial-gradient(circle, #fff 1.4px, transparent 1.4px);
+    background-size:22px 22px;
+  }
+  .hero-inner{ position:relative; z-index:1; }
+  .hero h1{
+    font-family:'Fraunces',serif; font-weight:600; font-size:clamp(26px,4vw,38px);
+    margin:0 0 10px; line-height:1.25;
+  }
+  .hero h1 .highlight{
+    background:var(--amber); color:#3D2A0E; padding:3px 14px; border-radius:10px;
+    display:inline-block; font-weight:700;
+  }
+  .hero .hero-sub{
+    font-size:15px; color:#DCEDEA; margin:0 0 22px; font-weight:500;
+  }
+  .hero .hero-tag{
+    display:inline-block; background:rgba(255,255,255,0.14); border:1px solid rgba(255,255,255,0.25);
+    padding:8px 18px; border-radius:999px; font-size:13px; font-weight:600; color:#fff; margin-bottom:36px;
+  }
+  .hero-logo{
+    width:150px; height:150px; border-radius:50%; margin:0 auto 30px; background:#fff;
+    display:flex; align-items:center; justify-content:center; box-shadow:0 10px 30px rgba(0,0,0,0.2);
+  }
+  .hero-logo svg{ width:78px; height:78px; }
+  .hero-quote{
+    font-style:italic; font-size:13px; color:#CFE5E1; max-width:480px; margin:0 auto;
+    background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.18); border-radius:999px;
+    padding:10px 20px;
+  }
+
+  .orbit-label{
+    text-align:center; font-family:'IBM Plex Mono',monospace; font-size:11px; letter-spacing:.14em;
+    text-transform:uppercase; color:var(--ink-soft); margin:0 0 26px;
+  }
+  .orbit-grid{
+    display:grid; grid-template-columns:1fr 1fr 1fr; grid-template-rows:auto auto auto;
+    align-items:center; justify-items:center; gap:22px; max-width:520px; margin:0 auto;
+  }
+  .orbit-circle-btn{
+    width:120px; height:120px; border-radius:50%; border:none; cursor:pointer;
+    background:linear-gradient(160deg, var(--teal) 0%, var(--teal-2) 100%); color:#fff;
+    display:flex; flex-direction:column; align-items:center; justify-content:center; gap:8px;
+    font-family:'Inter',sans-serif; font-weight:700; font-size:13px; text-align:center; padding:10px;
+    box-shadow:0 12px 30px rgba(18,63,62,0.28); transition:transform .15s ease, box-shadow .15s ease;
+  }
+  .orbit-circle-btn:hover{ transform:translateY(-3px) scale(1.03); }
+  .orbit-circle-btn svg{ width:30px; height:30px; }
+  .orbit-center{ grid-column:2; grid-row:2; }
+  .orbit-top-popup{
+    grid-column:2; grid-row:1; display:flex; flex-direction:column; align-items:center;
+    opacity:0; transform:translateY(14px) scale(.9); pointer-events:none;
+    transition:opacity .25s ease, transform .25s ease;
+  }
+  .orbit-top-popup.open{ opacity:1; transform:translateY(0) scale(1); pointer-events:auto; }
+  .orbit-top-popup .orbit-circle-btn{
+    width:100px; height:100px; font-size:12px;
+    background:linear-gradient(160deg, var(--amber) 0%, #9C6B26 100%); color:#fff;
+  }
+  .orbit-right-popup{
+    grid-column:3; grid-row:2; display:flex; flex-direction:column; align-items:center;
+    opacity:0; transform:translateX(14px) scale(.9); pointer-events:none;
+    transition:opacity .25s ease, transform .25s ease;
+  }
+  .orbit-right-popup.open{ opacity:1; transform:translateX(0) scale(1); pointer-events:auto; }
+  .orbit-right-popup .orbit-circle-btn{
+    width:100px; height:100px; font-size:11.5px;
+    background:linear-gradient(160deg, #3F7A5C 0%, #2A5A40 100%); color:#fff;
+  }
+  .orbit-left-popup{
+    grid-column:1; grid-row:2; display:flex; flex-direction:column; align-items:center;
+    opacity:0; transform:translateX(-14px) scale(.9); pointer-events:none;
+    transition:opacity .25s ease, transform .25s ease;
+  }
+  .orbit-left-popup.open{ opacity:1; transform:translateX(0) scale(1); pointer-events:auto; }
+  .orbit-left-popup .orbit-circle-btn{
+    width:100px; height:100px; font-size:11.5px;
+    background:linear-gradient(160deg, #2E5490 0%, #1D3A66 100%); color:#fff;
+  }
+  .orbit-slot-empty{ min-height:20px; grid-row:2; }
+  .orbit-slot-left{ grid-column:1; }
+  .orbit-slot-right{ grid-column:3; }
+  .orbit-slot-bottom{ grid-column:1 / span 3; grid-row:3; min-height:20px; }
+  @media (max-width:560px){
+    .hero{ padding:40px 20px 32px; }
+  }
+
+  /* Header */
+  .topbar{
+    display:flex; align-items:flex-end; justify-content:space-between;
+    gap:20px; padding-bottom:20px; margin-bottom:24px;
+    border-bottom:1px solid var(--line);
+  }
+  .brand-eyebrow{
+    font-family:'IBM Plex Mono',monospace; font-size:11px; letter-spacing:.14em;
+    text-transform:uppercase; color:var(--teal-2); margin:0 0 6px;
+  }
+  .brand-title{
+    font-family:'Fraunces',serif; font-weight:600; font-size:32px; margin:0;
+    color:var(--teal); letter-spacing:-0.01em;
+  }
+  .brand-sub{ margin:6px 0 0; color:var(--ink-soft); font-size:14px; }
+  .admin-zone{ display:flex; align-items:center; gap:10px; }
+  .pill{
+    font-family:'IBM Plex Mono',monospace; font-size:11px; padding:6px 10px;
+    border-radius:999px; border:1px solid var(--line); color:var(--ink-soft);
+    display:flex; align-items:center; gap:6px; background:var(--paper);
+  }
+  .pill .dot{ width:7px; height:7px; border-radius:50%; background:#B7BFBD; }
+  .pill.on .dot{ background:var(--ok); }
+  .pill.on{ color:var(--ok); border-color:var(--ok-soft); background:var(--ok-soft); }
+
+  button{ font-family:'Inter',sans-serif; cursor:pointer; }
+  .btn{
+    border:1px solid var(--teal); background:var(--teal); color:#fff;
+    padding:9px 16px; border-radius:8px; font-size:13.5px; font-weight:600;
+    transition:transform .12s ease, background .15s ease;
+  }
+  .btn:hover{ background:var(--teal-2); }
+  .btn:active{ transform:scale(0.97); }
+  .btn.secondary{ background:transparent; color:var(--teal); }
+  .btn.secondary:hover{ background:#E7EEEC; }
+  .btn.danger{ background:transparent; border-color:var(--danger-soft); color:var(--danger); }
+  .btn.danger:hover{ background:var(--danger-soft); }
+  .btn.small{ padding:6px 11px; font-size:12.5px; border-radius:7px; }
+  .btn[disabled]{ opacity:.45; cursor:not-allowed; }
+
+  /* Stat cards */
+  .stats{ display:grid; grid-template-columns:repeat(auto-fit, minmax(150px,1fr)); gap:12px; margin-bottom:26px; }
+  .section-label{
+    font-family:'IBM Plex Mono',monospace; font-size:11px; letter-spacing:.1em; text-transform:uppercase;
+    color:var(--ink-soft); margin:0 0 10px;
+  }
+  .stat{
+    background:var(--paper); border:1px solid var(--line); border-radius:var(--radius);
+    padding:16px 18px; box-shadow:var(--shadow);
+  }
+  /* Reminder banner */
+  .reminder-card{
+    background:var(--paper); border:1px solid var(--danger-soft); border-left:4px solid var(--danger);
+    border-radius:var(--radius); padding:16px 18px; margin-bottom:22px; box-shadow:var(--shadow);
+  }
+  .reminder-card.warn{ border-left-color:var(--amber); border-color:var(--amber-soft); }
+  .reminder-head{ display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:10px; }
+  .reminder-title{ font-family:'Fraunces',serif; font-weight:600; font-size:15.5px; color:var(--danger); display:flex; align-items:center; gap:8px; margin:0; }
+  .reminder-title.warn{ color:#8A5F1E; }
+  .reminder-sub{ font-size:12px; color:var(--ink-soft); margin:0 0 12px; }
+  .reminder-list{ display:flex; flex-direction:column; gap:6px; }
+  .reminder-item{
+    display:flex; align-items:center; justify-content:space-between; gap:10px;
+    padding:8px 10px; border-radius:7px; background:#FAF7F3; font-size:13px;
+  }
+  .reminder-item .who{ font-weight:600; color:var(--ink); }
+  .reminder-item .doc{ color:var(--ink-soft); font-size:12px; }
+  .reminder-status{ font-family:'IBM Plex Mono',monospace; font-size:11px; padding:3px 8px; border-radius:6px; white-space:nowrap; font-weight:600; }
+  .reminder-status.expired{ background:var(--danger-soft); color:var(--danger); }
+  .reminder-status.soon{ background:var(--amber-soft); color:#8A5F1E; }
+  .stat.clickable{ cursor:pointer; transition:transform .12s ease, border-color .15s ease, box-shadow .15s ease; }
+  .stat.clickable:hover{ border-color:var(--teal-2); transform:translateY(-2px); }
+  .stat.clickable:active{ transform:translateY(0); }
+  .stat.active{ border-color:var(--teal); background:#EFF6F4; box-shadow:0 0 0 2px rgba(18,63,62,0.12); }
+  .stat .num{ font-family:'Fraunces',serif; font-size:28px; font-weight:600; color:var(--teal); line-height:1; }
+  .stat .label{ font-size:12px; color:var(--ink-soft); margin-top:6px; }
+
+  /* Toolbar */
+  .toolbar{
+    display:flex; flex-wrap:wrap; gap:10px; align-items:center; margin-bottom:16px;
+  }
+  .search{
+    flex:1; min-width:200px; position:relative;
+  }
+  .search input{
+    width:100%; padding:10px 12px 10px 34px; border-radius:8px; border:1px solid var(--line);
+    background:var(--paper); font-size:13.5px; color:var(--ink);
+  }
+  .search input:focus{ outline:none; border-color:var(--teal-2); }
+  .search::before{
+    content:"⌕"; position:absolute; left:11px; top:50%; transform:translateY(-50%);
+    color:var(--ink-soft); font-size:16px;
+  }
+  select.filter{
+    padding:9px 10px; border-radius:8px; border:1px solid var(--line); background:var(--paper);
+    font-size:13px; color:var(--ink-soft); max-width:170px;
+  }
+  select.filter:focus{ outline:none; border-color:var(--teal-2); }
+
+  /* Table */
+  .table-card{
+    background:var(--paper); border:1px solid var(--line); border-radius:var(--radius);
+    box-shadow:var(--shadow); overflow:hidden;
+  }
+  table{ width:100%; border-collapse:collapse; font-size:13.3px; }
+  thead th{
+    text-align:left; padding:11px 14px; font-size:11px; letter-spacing:.06em; text-transform:uppercase;
+    color:var(--ink-soft); border-bottom:1px solid var(--line); background:#F8FAF9;
+    font-weight:600; white-space:nowrap;
+  }
+  tbody td{ padding:12px 14px; border-bottom:1px solid var(--line); vertical-align:top; }
+  tbody tr:last-child td{ border-bottom:none; }
+  tbody tr:hover{ background:#FAFBFA; }
+  .nama-cell{ font-family:'Fraunces',serif; font-weight:600; color:var(--teal); font-size:14.5px; }
+  .sub{ color:var(--ink-soft); font-size:12px; margin-top:2px; }
+  .badge{
+    display:inline-block; padding:3px 9px; border-radius:999px; font-size:11.5px; font-weight:600;
+    white-space:nowrap;
+  }
+  .badge.pns{ background:#E1EEE5; color:#2F6248; }
+  .badge.pppk{ background:#EAF0F8; color:#2E5490; }
+  .badge.pppkp{ background:#EDE7F5; color:#5A3E8C; }
+  .badge.blud{ background:var(--amber-soft); color:#8A5F1E; }
+  .badge.pt{ background:#F3ECE6; color:#7A5133; }
+  .badge.aktif{ background:var(--ok-soft); color:var(--ok); }
+  .badge.tidak-aktif{ background:var(--danger-soft); color:var(--danger); }
+  .badge.cuti-tahunan{ background:#EAF0F8; color:#2E5490; }
+  .badge.cuti-sakit{ background:var(--danger-soft); color:var(--danger); }
+  .badge.cuti-melahirkan{ background:#EDE7F5; color:#5A3E8C; }
+  .badge.cuti-menikah{ background:var(--amber-soft); color:#8A5F1E; }
+
+  /* Cuti table */
+  .month-nav{
+    display:flex; align-items:center; justify-content:center; gap:16px; margin-bottom:22px;
+  }
+  .month-nav button{
+    width:36px; height:36px; border-radius:8px; border:1px solid var(--line); background:var(--paper);
+    font-size:16px; color:var(--teal); cursor:pointer;
+  }
+  .month-nav button:hover{ background:#EFF6F4; }
+  .month-nav .month-label{
+    font-family:'Fraunces',serif; font-weight:600; font-size:18px; color:var(--teal); min-width:180px;
+    text-align:center;
+  }
+  .cuti-table-wrap{ width:100%; }
+  table.cuti-table{ border-collapse:collapse; font-size:11px; table-layout:fixed; width:100%; }
+  table.cuti-table th, table.cuti-table td{
+    border:1px solid var(--line); padding:4px 2px; text-align:center; overflow:hidden; text-overflow:ellipsis;
+  }
+  table.cuti-table thead th{
+    background:#F8FAF9; color:var(--ink-soft); font-weight:600; font-size:9.5px; text-transform:uppercase;
+  }
+  table.cuti-table td.nama-col, table.cuti-table th.nama-col{ text-align:left; white-space:normal; width:9%; padding-left:6px; }
+  table.cuti-table td.ruangan-col, table.cuti-table th.ruangan-col{ text-align:left; white-space:normal; width:8%; padding-left:6px; }
+  table.cuti-table td.day-cell{ width:auto; color:var(--ink-soft); font-size:10px; }
+  table.cuti-table td.day-cell.taken{ background:var(--danger); color:#fff; font-weight:700; border-color:var(--danger); }
+  table.cuti-table td.day-cell.taken-excluded{ background:#E4E8E7; color:#8A9694; font-weight:600; }
+  table.cuti-table td.day-cell-sunday{ background:#FBE1DE; }
+  table.cuti-table td.day-cell-holiday{ background:#FADCEC; }
+  table.cuti-table th.day-header-sunday{ background:var(--danger); color:#fff; }
+  table.cuti-table th.day-header-holiday{ background:#D6488F; color:#fff; }
+  table.cuti-table td.total-col, table.cuti-table th.total-col{ font-weight:700; color:var(--teal); background:#F3F8F7; width:4%; }
+  table.cuti-table td.no-col, table.cuti-table th.no-col{ width:3%; color:var(--ink-soft); }
+  table.cuti-table td.aksi-col, table.cuti-table th.aksi-col{ white-space:nowrap; width:11%; overflow:visible; }
+  table.cuti-table td.aksi-col .row-actions{ display:flex; flex-direction:column; gap:4px; }
+  table.cuti-table td.aksi-col .btn.small{ padding:3px 6px; font-size:10px; width:100%; }
+  .row-actions{ display:flex; gap:6px; }
+  .empty-row td{ padding:44px 14px; text-align:center; color:var(--ink-soft); }
+  .empty-row .big{ font-family:'Fraunces',serif; font-size:17px; color:var(--teal); margin-bottom:4px; }
+
+  /* Modal */
+  .overlay{
+    position:fixed; inset:0; background:rgba(18,45,44,0.45); display:flex; align-items:center;
+    justify-content:center; z-index:50; padding:20px;
+  }
+  .modal{
+    background:var(--paper); width:100%; max-width:560px; border-radius:14px; padding:26px 28px 24px;
+    box-shadow:0 20px 60px rgba(0,0,0,0.25); max-height:90vh; overflow-y:auto;
+  }
+  .modal h2{ font-family:'Fraunces',serif; font-size:22px; margin:0 0 4px; color:var(--teal); }
+  .modal p.hint{ margin:0 0 18px; color:var(--ink-soft); font-size:13px; }
+  .field{ margin-bottom:14px; }
+  .field label{ display:block; font-size:12px; font-weight:600; color:var(--ink-soft); margin-bottom:5px; letter-spacing:.02em; }
+  .opt-tag{ font-weight:400; font-style:italic; color:#9AA8A6; text-transform:none; letter-spacing:0; }
+  .field input, .field select, .field textarea{
+    width:100%; padding:9px 11px; border-radius:8px; border:1px solid var(--line); font-size:13.5px;
+    font-family:'Inter',sans-serif; color:var(--ink); background:#FCFDFD;
+  }
+  .field input:focus, .field select:focus, .field textarea:focus{ outline:none; border-color:var(--teal-2); }
+  .grid2{ display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+  .modal-actions{ display:flex; justify-content:flex-end; gap:8px; margin-top:20px; }
+  .close-x{
+    position:absolute; top:16px; right:18px; background:none; border:none; font-size:20px;
+    color:var(--ink-soft);
+  }
+  .modal{ position:relative; }
+  textarea{ resize:vertical; min-height:60px; }
+
+  .login-icon{
+    width:40px; height:40px; border-radius:10px; background:var(--amber-soft); display:flex;
+    align-items:center; justify-content:center; font-size:18px; margin-bottom:12px; color:#8A5F1E;
+  }
+  .error-text{ color:var(--danger); font-size:12.5px; margin-top:8px; }
+  .footnote{
+    text-align:center; color:var(--ink-soft); font-size:11.5px; margin-top:28px; line-height:1.6;
+  }
+  @media (max-width: 720px){
+    .grid2{ grid-template-columns:1fr; }
+    table{ font-size:12.5px; }
+    thead th, tbody td{ padding:9px 10px; }
+    .topbar{ flex-direction:column; align-items:flex-start; }
+  }
+</style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/tesseract.js/4.1.1/tesseract.min.js"></script>
+</head>
+<body>
+<div class="wrap" id="app"></div>
+
+<script>
+const ADMIN_PASSWORD = "admin123"; // ganti sesuai kebutuhan Anda
+
+// ============================================================
+// KONFIGURASI GOOGLE SHEETS SEBAGAI DATABASE
+// ============================================================
+// 1. Buat Google Sheet baru.
+// 2. Buka menu Extensions > Apps Script, hapus isi default, tempel kode
+//    Apps Script yang saya berikan terpisah, lalu Deploy > New deployment >
+//    Web app (Execute as: Me, Who has access: Anyone).
+// 3. Salin URL Web App yang muncul, tempel di antara tanda kutip di bawah ini.
+// 4. Kosongkan (biarkan "") jika ingin tetap pakai penyimpanan bawaan.
+const SHEETS_API_URL = "https://script.google.com/macros/s/AKfycbyFzfVc_qZM_HmDvxk5Gl8Ah40qtw1ty8GvmA6h-nts6qsLTvoBooYnzELiMsijTP2Buw/exec";
+
+async function sheetsGetList(table){
+  const res = await fetch(`${SHEETS_API_URL}?action=getList&table=${encodeURIComponent(table)}`);
+  const data = await res.json();
+  return data; // { table, rows } atau { error }
+}
+async function sheetsSetList(table, rows){
+  const res = await fetch(SHEETS_API_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'text/plain;charset=utf-8' }, // hindari CORS preflight
+    body: JSON.stringify({ action: 'setList', table, rows })
+  });
+  return await res.json();
+}
+
+// dataStore: otomatis pakai Google Sheets (sheet per tabel dengan header kolom asli)
+// kalau SHEETS_API_URL sudah diisi; kalau belum, pakai penyimpanan bawaan (window.storage)
+// supaya aplikasi tetap jalan.
+const dataStore = {
+  // table: nama sheet Google Sheets ("Staff","Cuti","LiburNasional","Surat")
+  // legacyKey: nama key lama untuk penyimpanan bawaan (window.storage)
+  async getList(table, legacyKey){
+    if(SHEETS_API_URL){
+      try{
+        const res = await sheetsGetList(table);
+        return (res && res.rows) ? res.rows : [];
+      }catch(e){
+        console.error('Gagal mengambil dari Google Sheets', e);
+        return [];
+      }
+    }
+    try{
+      const res = await window.storage.get(legacyKey, true);
+      return res && res.value ? JSON.parse(res.value) : [];
+    }catch(e){
+      return [];
+    }
+  },
+  async setList(table, legacyKey, rows){
+    if(SHEETS_API_URL){
+      try{ return await sheetsSetList(table, rows); }
+      catch(e){ console.error('Gagal menyimpan ke Google Sheets', e); return null; }
+    }
+    try{ return await window.storage.set(legacyKey, JSON.stringify(rows), true); }
+    catch(e){ console.error('Gagal menyimpan data', e); return null; }
+  }
+};
+
+async function uploadFileToDrive(base64, fileName){
+  if(!SHEETS_API_URL) return null;
+  try{
+    const res = await fetch(SHEETS_API_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify({ action: 'uploadFile', base64, fileName })
+    });
+    const data = await res.json();
+    if(data && data.url) return data.url;
+    console.error('Respons upload Drive tidak sesuai', data);
+    return null;
+  }catch(e){
+    console.error('Gagal upload ke Google Drive', e);
+    return null;
+  }
+}
+
+const PENDIDIKAN_OPTIONS = ["SMA","SMK","D3 Farmasi","S1 Farmasi","S2 Farmasi + Apoteker","S1 Farmasi + Apoteker"];
+const STATUS_OPTIONS = ["PNS","PPPK","PPPK Paruh Waktu","BLUD","PT"];
+const PROFESI_CATEGORIES = ["Apoteker","TTK","Umum","Transporter","SKM","Adminkes","S2 Farmasi"];
+const KETERANGAN_CUTI_OPTIONS = ["Cuti Tahunan","Cuti Sakit","Cuti Melahirkan","Cuti Menikah"];
+const SHIFT_OPTIONS = ["Shift","Non Shift"];
+const BULAN_NAMES = ["Januari","Februari","Maret","April","Mei","Juni","Juli","Agustus","September","Oktober","November","Desember"];
+
+let state = {
+  loading: true,
+  screen: 'landing',   // 'landing' | 'dashboard' | 'cuti'
+  staff: [],
+  isAdmin: false,
+  search: "",
+  filterStatus: "",
+  filterPendidikan: "",
+  filterProfesi: "",
+  farmasiMenuOpen: false,
+  modal: null,       // null | 'form' | 'login' | 'delete' | 'guide' | 'cuti-form' | 'cuti-delete' | 'libur' | 'surat-edit' | 'surat-delete'
+  editingId: null,
+  deletingId: null,
+  loginError: "",
+  cutiStaf: [],
+  cutiMonth: new Date().getMonth() + 1,
+  cutiYear: new Date().getFullYear(),
+  cutiEditingId: null,
+  cutiDeletingId: null,
+  liburNasional: [],
+  liburInput: '',
+  rekapYear: new Date().getFullYear(),
+  suratList: [],
+  suratEditingId: null,
+  suratUploading: false,
+  suratUploadStatus: '',
+  suratDeletingId: null
+};
+
+function uid(){ return 's_' + Math.random().toString(36).slice(2,10) + Date.now().toString(36); }
+
+const REMINDER_THRESHOLD_DAYS = 90; // ambang pengingat: 90 hari (3 bulan) sebelum kadaluarsa
+
+function daysUntil(dateStr){
+  if(!dateStr) return null;
+  const today = new Date(); today.setHours(0,0,0,0);
+  const target = new Date(dateStr + 'T00:00:00');
+  if(isNaN(target.getTime())) return null;
+  return Math.round((target - today) / 86400000);
+}
+
+function getExpiryReminders(){
+  const items = [];
+  state.staff.forEach(s => {
+    if(s.tglKadaluarsaSTR){
+      const d = daysUntil(s.tglKadaluarsaSTR);
+      if(d !== null && d <= REMINDER_THRESHOLD_DAYS) items.push({ nama:s.nama, jenis:'STR', nomor:s.nomorSTR, tanggal:s.tglKadaluarsaSTR, sisaHari:d, link:s.linkDokumenSTR });
+    }
+    if(s.tglKadaluarsaSIPA){
+      const d = daysUntil(s.tglKadaluarsaSIPA);
+      if(d !== null && d <= REMINDER_THRESHOLD_DAYS) items.push({ nama:s.nama, jenis:'SIPA', nomor:s.nomorSIPA, tanggal:s.tglKadaluarsaSIPA, sisaHari:d, link:s.linkDokumenSIPA });
+    }
+  });
+  items.sort((a,b) => a.sisaHari - b.sisaHari);
+  return items;
+}
+
+async function loadData(){
+  try{
+    state.staff = await dataStore.getList('Staff', 'staff-list');
+  }catch(e){
+    state.staff = [];
+  }
+  try{
+    state.cutiStaf = await dataStore.getList('Cuti', 'cuti-staf-list');
+  }catch(e){
+    state.cutiStaf = [];
+  }
+  try{
+    const liburRows = await dataStore.getList('LiburNasional', 'libur-nasional-list');
+    state.liburNasional = SHEETS_API_URL
+      ? liburRows.map(r => r.tanggal).filter(Boolean)
+      : liburRows; // penyimpanan bawaan sudah berupa array string langsung
+  }catch(e){
+    state.liburNasional = [];
+  }
+  try{
+    state.suratList = await dataStore.getList('Surat', 'surat-list');
+  }catch(e){
+    state.suratList = [];
+  }
+  if(typeof pdfjsLib !== 'undefined'){
+    pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+  }
+  state.loading = false;
+  render();
+}
+
+async function saveCutiData(){
+  try{
+    await dataStore.setList('Cuti', 'cuti-staf-list', state.cutiStaf);
+  }catch(e){
+    console.error('Gagal menyimpan data cuti', e);
+    alert('Gagal menyimpan data cuti. Coba lagi.');
+  }
+}
+
+async function saveLiburNasional(){
+  try{
+    const rows = SHEETS_API_URL ? state.liburNasional.map(t => ({ tanggal: t })) : state.liburNasional;
+    await dataStore.setList('LiburNasional', 'libur-nasional-list', rows);
+  }catch(e){
+    console.error('Gagal menyimpan data libur nasional', e);
+    alert('Gagal menyimpan data libur nasional. Coba lagi.');
+  }
+}
+
+async function saveSuratList(){
+  try{
+    await dataStore.setList('Surat', 'surat-list', state.suratList);
+  }catch(e){
+    console.error('Gagal menyimpan data surat', e);
+    alert('Gagal menyimpan data surat. Coba lagi.');
+  }
+}
+
+function daysInMonth(year, month){ return new Date(year, month, 0).getDate(); }
+
+function parseDateLocal(dateStr){
+  if(!dateStr) return null;
+  const d = new Date(dateStr + 'T00:00:00');
+  return isNaN(d.getTime()) ? null : d;
+}
+
+function formatDateISO(d){
+  const pad = n => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+}
+
+function countDaysInclusive(startStr, endStr){
+  const start = parseDateLocal(startStr);
+  const end = parseDateLocal(endStr);
+  if(!start || !end) return 0;
+  const diff = Math.round((end - start) / 86400000) + 1;
+  return diff > 0 ? diff : 0;
+}
+
+function isCountedDay(dateObj, shift, holidayList){
+  const dow = dateObj.getDay(); // 0 = Minggu, 6 = Sabtu
+  const dateStr = formatDateISO(dateObj);
+  if(holidayList.includes(dateStr)) return false;
+  if(shift === 'Non Shift') return dow >= 1 && dow <= 5;
+  if(shift === 'Shift') return dow >= 1 && dow <= 6;
+  return true; // fallback untuk data lama tanpa keterangan shift
+}
+
+function countCutiDays(entry, holidayList){
+  const start = parseDateLocal(entry.tglMulai);
+  const end = parseDateLocal(entry.tglSelesai);
+  if(!start || !end) return 0;
+  if(!entry.shift) return countDaysInclusive(entry.tglMulai, entry.tglSelesai);
+  let count = 0;
+  const cursor = new Date(start);
+  while(cursor <= end){
+    if(isCountedDay(cursor, entry.shift, holidayList)) count++;
+    cursor.setDate(cursor.getDate() + 1);
+  }
+  return count;
+}
+
+function getDayNumbersForEntry(entry, year, month){
+  const start = parseDateLocal(entry.tglMulai);
+  const end = parseDateLocal(entry.tglSelesai);
+  if(!start || !end) return [];
+  const days = [];
+  const cursor = new Date(start);
+  while(cursor <= end){
+    if(cursor.getFullYear() === year && (cursor.getMonth() + 1) === month){
+      const counted = entry.shift ? isCountedDay(cursor, entry.shift, state.liburNasional) : true;
+      days.push({ day: cursor.getDate(), counted });
+    }
+    cursor.setDate(cursor.getDate() + 1);
+  }
+  return days;
+}
+
+function fileToBase64(file){
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result.split(',')[1]);
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
+function buildTextWithLines(content){
+  const items = content.items;
+  const lines = [];
+  let currentY = null;
+  let currentLine = [];
+  items.forEach(item => {
+    const y = item.transform[5];
+    if(currentY === null || Math.abs(y - currentY) > 2){
+      if(currentLine.length) lines.push(currentLine.join(' '));
+      currentLine = [item.str];
+      currentY = y;
+    } else {
+      currentLine.push(item.str);
+    }
+  });
+  if(currentLine.length) lines.push(currentLine.join(' '));
+  return lines.join('\n');
+}
+
+async function extractPdfFirstPageText(arrayBuffer){
+  const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+  const page = await pdf.getPage(1);
+  const content = await page.getTextContent();
+  return buildTextWithLines(content);
+}
+
+async function ocrPdfFirstPage(arrayBuffer, onProgress){
+  const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+  const page = await pdf.getPage(1);
+  const viewport = page.getViewport({ scale: 2.2 });
+  const canvas = document.createElement('canvas');
+  canvas.width = viewport.width;
+  canvas.height = viewport.height;
+  const ctx = canvas.getContext('2d');
+  await page.render({ canvasContext: ctx, viewport }).promise;
+
+  const result = await Tesseract.recognize(canvas, 'ind+eng', {
+    logger: m => {
+      if(onProgress && m.status === 'recognizing text'){
+        onProgress(Math.round((m.progress || 0) * 100));
+      }
+    }
+  });
+  return result.data.text;
+}
+
+function extractSuratFields(text){
+  const lines = text.split('\n').map(l => l.trim()).filter(Boolean);
+
+  // Cocok hanya jika label diikuti tanda ":" atau "-" pada baris yang sama, contoh: "Nomor : B-152/RSAMP/..."
+  function findLabelValueStrict(labelRegex){
+    for(const line of lines){
+      const m = line.match(labelRegex);
+      if(m && m[1] && m[1].trim()) return m[1].trim();
+    }
+    return '';
+  }
+
+  // Cocok jika baris HANYA berisi label itu sendiri (tanpa kata lain), nilainya diambil dari baris berikutnya
+  function findLabelOnNextLine(exactLabelRegex){
+    for(let i = 0; i < lines.length; i++){
+      if(exactLabelRegex.test(lines[i]) && lines[i + 1]){
+        return lines[i + 1].trim();
+      }
+    }
+    return '';
+  }
+
+  const nomorSurat =
+    findLabelValueStrict(/^Nomor\s*[:\-]\s*(.+)$/i) ||
+    findLabelValueStrict(/^No\.?\s*[:\-]\s*(.+)$/i) ||
+    findLabelOnNextLine(/^Nomor$/i) ||
+    findLabelOnNextLine(/^No\.?$/i);
+
+  const hal =
+    findLabelValueStrict(/^Hal\s*[:\-]\s*(.+)$/i) ||
+    findLabelValueStrict(/^Perihal\s*[:\-]\s*(.+)$/i) ||
+    findLabelOnNextLine(/^Hal$/i) ||
+    findLabelOnNextLine(/^Perihal$/i);
+
+  const bulan = '(Januari|Februari|Maret|April|Mei|Juni|Juli|Agustus|September|Oktober|November|Desember)';
+  const bulanRe = new RegExp('(\\d{1,2})\\s+' + bulan + '\\s+(\\d{4})', 'i');
+  let tanggalSurat = '';
+  for(const line of lines){
+    const m = line.match(bulanRe);
+    if(m){ tanggalSurat = `${m[1]} ${m[2]} ${m[3]}`; break; }
+  }
+
+  return { nomorSurat, hal, tanggalSurat };
+}
+
+function base64ToBlobUrl(base64, mime){
+  const byteChars = atob(base64);
+  const byteNumbers = new Array(byteChars.length);
+  for(let i = 0; i < byteChars.length; i++){ byteNumbers[i] = byteChars.charCodeAt(i); }
+  const byteArray = new Uint8Array(byteNumbers);
+  const blob = new Blob([byteArray], { type: mime || 'application/pdf' });
+  return URL.createObjectURL(blob);
+}
+
+const SURAT_MAX_SIZE_BYTES = 5 * 1024 * 1024; // 5 MB
+
+const SURAT_CHUNK_SIZE = 1 * 1024 * 1024; // ~1 MB per bagian, lebih aman dari batas per-item penyimpanan
+
+function sleep(ms){ return new Promise(resolve => setTimeout(resolve, ms)); }
+
+async function storageSetWithRetry(key, value, attempts = 3){
+  for(let attempt = 1; attempt <= attempts; attempt++){
+    try{
+      const result = await window.storage.set(key, value, true);
+      if(result) return true;
+    }catch(e){
+      console.error(`storage.set gagal (percobaan ${attempt})`, key, e);
+    }
+    if(attempt < attempts) await sleep(400 * attempt);
+  }
+  return false;
+}
+
+async function storageGetWithRetry(key, attempts = 3){
+  for(let attempt = 1; attempt <= attempts; attempt++){
+    try{
+      const res = await window.storage.get(key, true);
+      if(res && res.value) return res.value;
+    }catch(e){
+      console.error(`storage.get gagal (percobaan ${attempt})`, key, e);
+    }
+    if(attempt < attempts) await sleep(400 * attempt);
+  }
+  return null;
+}
+
+async function saveFileChunked(id, base64){
+  const chunks = [];
+  for(let i = 0; i < base64.length; i += SURAT_CHUNK_SIZE){
+    chunks.push(base64.slice(i, i + SURAT_CHUNK_SIZE));
+  }
+  for(let i = 0; i < chunks.length; i++){
+    const ok = await storageSetWithRetry(`surat-file:${id}:${i}`, chunks[i]);
+    if(!ok){
+      throw new Error(`Gagal menyimpan bagian file ke-${i + 1} dari ${chunks.length} setelah beberapa kali percobaan`);
+    }
+  }
+  // Verifikasi: baca ulang dan bandingkan panjang totalnya sebelum dianggap berhasil
+  const verify = await loadFileChunked(id, chunks.length);
+  if(verify.length !== base64.length){
+    throw new Error('Verifikasi file gagal — data yang tersimpan tidak lengkap.');
+  }
+  return chunks.length;
+}
+
+async function loadFileChunked(id, chunkCount){
+  let combined = '';
+  for(let i = 0; i < chunkCount; i++){
+    const value = await storageGetWithRetry(`surat-file:${id}:${i}`);
+    if(!value) throw new Error('Bagian file tidak lengkap (bagian ke-' + (i + 1) + ' hilang)');
+    combined += value;
+  }
+  return combined;
+}
+
+async function handleSuratFileSelected(file){
+  if(!file) return;
+  if(file.type !== 'application/pdf' && !file.name.toLowerCase().endsWith('.pdf')){
+    alert('File harus berformat PDF.');
+    return;
+  }
+  if(file.size > SURAT_MAX_SIZE_BYTES){
+    alert(`Ukuran file (${(file.size / (1024*1024)).toFixed(1)} MB) melebihi batas maksimal 5 MB. Silakan upload file PDF yang lebih kecil.`);
+    return;
+  }
+  if(typeof pdfjsLib === 'undefined'){
+    alert('Modul pembaca PDF belum siap dimuat. Coba lagi sesaat lagi.');
+    return;
+  }
+  state.suratUploading = true;
+  state.suratUploadStatus = 'Membaca teks PDF…';
+  render();
+
+  let fields = { nomorSurat:'', hal:'', tanggalSurat:'' };
+  let usedOcr = false;
+  try{
+    const arrayBuffer = await file.arrayBuffer();
+    const text = await extractPdfFirstPageText(arrayBuffer);
+    fields = extractSuratFields(text);
+  }catch(err){
+    console.error('Gagal membaca isi PDF', err);
+  }
+
+  const foundNothing = !fields.tanggalSurat && !fields.hal && !fields.nomorSurat;
+  if(foundNothing && typeof Tesseract !== 'undefined'){
+    usedOcr = true;
+    try{
+      state.suratUploadStatus = 'Sepertinya ini hasil scan — membaca dengan OCR… 0%';
+      render();
+      const arrayBuffer2 = await file.arrayBuffer();
+      const ocrText = await ocrPdfFirstPage(arrayBuffer2, pct => {
+        state.suratUploadStatus = `Sepertinya ini hasil scan — membaca dengan OCR… ${pct}%`;
+        render();
+      });
+      fields = extractSuratFields(ocrText);
+    }catch(err){
+      console.error('Gagal OCR PDF', err);
+    }
+  }
+
+  state.suratUploadStatus = 'Menyimpan file…';
+  render();
+  let base64 = null;
+  try{
+    base64 = await fileToBase64(file);
+  }catch(err){
+    console.error('Gagal membaca file', err);
+  }
+
+  const entry = {
+    id: uid(),
+    tanggalSurat: fields.tanggalSurat,
+    hal: fields.hal,
+    nomorSurat: fields.nomorSurat,
+    fileName: file.name,
+    uploadedAt: new Date().toISOString()
+  };
+
+  if(base64 && SHEETS_API_URL){
+    state.suratUploadStatus = 'Mengunggah file ke Google Drive…';
+    render();
+    const driveUrl = await uploadFileToDrive(base64, file.name);
+    if(driveUrl){
+      entry.linkGoogleDrive = driveUrl;
+    } else {
+      alert('Gagal mengunggah file ke Google Drive. Data surat tetap tersimpan tanpa file — silakan lengkapi link Google Drive manual lewat tombol Edit, atau coba upload ulang.');
+    }
+  } else if(base64){
+    try{
+      entry.fileChunks = await saveFileChunked(entry.id, base64);
+    }catch(e){
+      console.error('Gagal menyimpan file PDF', e);
+      alert('Data surat tersimpan, tetapi file PDF gagal disimpan sepenuhnya.');
+    }
+  }
+
+  state.suratList.push(entry);
+  await saveSuratList();
+
+  state.suratUploading = false;
+  state.suratUploadStatus = '';
+  render();
+
+  if(!fields.tanggalSurat && !fields.hal && !fields.nomorSurat){
+    alert(`Surat berhasil diupload${usedOcr ? ' (sudah dicoba dengan OCR)' : ''}, tapi sistem tetap tidak menemukan Tanggal/Hal/Nomor secara otomatis dari isi PDF ini. Silakan klik "Edit" pada baris surat tersebut untuk melengkapinya.`);
+  }
+}
+
+async function viewSuratFile(id){
+  try{
+    const entry = state.suratList.find(x => x.id === id);
+    let base64 = null;
+    if(entry && entry.fileChunks){
+      base64 = await loadFileChunked(id, entry.fileChunks);
+    } else {
+      const res = await window.storage.get(`surat-file:${id}`, true);
+      base64 = res && res.value ? res.value : null;
+    }
+    if(!base64){
+      alert('File PDF untuk surat ini tidak tersimpan (kemungkinan gagal saat proses upload). Silakan hapus data surat ini lalu upload ulang file PDF-nya.');
+      return;
+    }
+    const url = base64ToBlobUrl(base64);
+    window.open(url, '_blank');
+  }catch(e){
+    console.error(e);
+    alert('File PDF gagal dibuka — kemungkinan filenya tidak tersimpan lengkap saat upload. Silakan hapus data surat ini lalu upload ulang file PDF-nya.');
+  }
+}
+
+function keteranganCutiBadgeClass(k){
+  if(k === 'Cuti Tahunan') return 'cuti-tahunan';
+  if(k === 'Cuti Sakit') return 'cuti-sakit';
+  if(k === 'Cuti Melahirkan') return 'cuti-melahirkan';
+  if(k === 'Cuti Menikah') return 'cuti-menikah';
+  return '';
+}
+
+function exportToExcel(){
+  if(typeof XLSX === 'undefined'){
+    alert('Modul Excel belum siap dimuat, coba lagi sesaat lagi.');
+    return;
+  }
+  if(state.staff.length === 0){
+    alert('Belum ada data staf untuk diunduh.');
+    return;
+  }
+  const rows = [...state.staff].sort((a,b) => (a.nama||'').localeCompare(b.nama||'')).map(s => ({
+    'Nama Staf': s.nama || '',
+    'NIP': s.nip || '',
+    'Tempat Lahir': s.tempatLahir || '',
+    'Tanggal Lahir': s.tanggalLahir ? formatTanggal(s.tanggalLahir) : '',
+    'Email': s.email || '',
+    'Jenis Kelamin': s.jenisKelamin === 'L' ? 'Laki-laki' : s.jenisKelamin === 'P' ? 'Perempuan' : '',
+    'Kualifikasi Pendidikan': s.pendidikan || '',
+    'Profesi': s.profesi || '',
+    'Status Pekerjaan': s.statusPekerjaan || '',
+    'Jabatan Sesuai SK': s.jabatanSK || '',
+    'Jabatan di Ruangan': s.jabatanRuangan || '',
+    'Nomor STR': s.nomorSTR || '',
+    'Tanggal Kadaluarsa STR': s.tglKadaluarsaSTR ? formatTanggal(s.tglKadaluarsaSTR) : '',
+    'Status STR': docStatus(s.tglKadaluarsaSTR) === 'aktif' ? 'Aktif' : docStatus(s.tglKadaluarsaSTR) === 'tidak-aktif' ? 'Tidak Aktif' : '',
+    'Link Dokumen STR': s.linkDokumenSTR || '',
+    'Nomor SIPA': s.nomorSIPA || '',
+    'Tanggal Kadaluarsa SIPA': s.tglKadaluarsaSIPA ? formatTanggal(s.tglKadaluarsaSIPA) : '',
+    'Status SIPA': docStatus(s.tglKadaluarsaSIPA) === 'aktif' ? 'Aktif' : docStatus(s.tglKadaluarsaSIPA) === 'tidak-aktif' ? 'Tidak Aktif' : '',
+    'Link Dokumen SIPA': s.linkDokumenSIPA || '',
+    'Keterangan': s.keterangan || ''
+  }));
+
+  const ws = XLSX.utils.json_to_sheet(rows);
+  ws['!cols'] = Object.keys(rows[0] || {}).map(k => ({ wch: Math.max(14, k.length + 2) }));
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'Database Staf');
+  const today = new Date().toISOString().slice(0,10);
+  XLSX.writeFile(wb, `database-staf-${today}.xlsx`);
+}
+
+function downloadTemplate(){
+  if(typeof XLSX === 'undefined'){
+    alert('Modul Excel belum siap dimuat, coba lagi sesaat lagi.');
+    return;
+  }
+  const headers = ['Nama Pegawai','NIP','Tanggal Lahir','Jenis Kelamin','Pendidikan','Profesi','Status','Jabatan Sesuai SK','Jabatan Saat Ini','Nomor STR','Nomor SIPA'];
+  const contoh = [
+    'Contoh: Siti Amelia, S.Farm., Apt.',
+    '198501012010012001',
+    '01/01/1985',
+    'Perempuan',
+    'S1 Farmasi + Apoteker',
+    'Apoteker',
+    'PNS',
+    'Apoteker Ahli Pertama',
+    'Apoteker Ruang Farmasi Rawat Jalan',
+    'STR12345678901234 (opsional)',
+    'SIPA1234567890 (opsional)'
+  ];
+  const catatan = ['CATATAN: Jenis Kelamin diisi Laki-laki / Perempuan', '', 'Format Tanggal Lahir: DD/MM/YYYY (contoh 01/01/1985)', 'Pendidikan diisi salah satu: SMA, SMK, D3 Farmasi, S1 Farmasi, S2 Farmasi + Apoteker, S1 Farmasi + Apoteker', 'Profesi diisi salah satu: Apoteker, TTK, Umum, Transporter, SKM, Adminkes, S2 Farmasi', 'Status diisi salah satu: PNS, PPPK, PPPK Paruh Waktu, BLUD, PT', '', '', '', ''];
+  const ws = XLSX.utils.aoa_to_sheet([headers, contoh, catatan]);
+  ws['!cols'] = headers.map(h => ({ wch: Math.max(24, h.length + 4) }));
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'Template Upload Staf');
+  XLSX.writeFile(wb, 'template-upload-staf.xlsx');
+}
+
+function normalizeJenisKelamin(raw){
+  const v = (raw || '').toString().trim().toLowerCase();
+  if(['l','laki-laki','laki laki','pria','male','m'].includes(v)) return 'L';
+  if(['p','perempuan','wanita','female','f'].includes(v)) return 'P';
+  return '';
+}
+
+function normalizePendidikan(raw){
+  const v = (raw || '').toString().trim();
+  if(!v) return '';
+  const matched = PENDIDIKAN_OPTIONS.find(o => o.toLowerCase() === v.toLowerCase());
+  return matched || v;
+}
+
+function normalizeStatusPekerjaan(raw){
+  const v = (raw || '').toString().trim();
+  if(!v) return '';
+  const matched = STATUS_OPTIONS.find(o => o.toLowerCase() === v.toLowerCase());
+  return matched || '';
+}
+
+function normalizeTanggalLahir(raw){
+  const v = (raw || '').toString().trim();
+  if(!v) return '';
+  if(/^\d{4}-\d{2}-\d{2}$/.test(v)) return v;
+  let d = null;
+  const dmy = v.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})$/);
+  if(dmy){
+    d = new Date(Number(dmy[3]), Number(dmy[2]) - 1, Number(dmy[1]));
+  } else {
+    d = new Date(v);
+  }
+  if(!d || isNaN(d.getTime())) return '';
+  const pad = n => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+}
+
+function handleImportFile(e){
+  const file = e.target.files[0];
+  if(!file) return;
+  if(typeof XLSX === 'undefined'){
+    alert('Modul Excel belum siap dimuat, coba lagi sesaat lagi.');
+    e.target.value = '';
+    return;
+  }
+  const reader = new FileReader();
+  reader.onload = async (evt) => {
+    try{
+      const data = new Uint8Array(evt.target.result);
+      const wb = XLSX.read(data, { type:'array' });
+      const ws = wb.Sheets[wb.SheetNames[0]];
+      const rows = XLSX.utils.sheet_to_json(ws, { defval:'', raw:false });
+
+      if(rows.length === 0){
+        alert('File kosong atau format tidak sesuai template.');
+        return;
+      }
+
+      let imported = 0, skipped = 0;
+      rows.forEach(row => {
+        const nama = (row['Nama Pegawai'] || row['Nama Staf'] || row['Nama'] || '').toString().trim();
+        if(!nama || /^(contoh|catatan)/i.test(nama)) { skipped++; return; }
+
+        state.staff.push({
+          id: uid(),
+          nama,
+          nip: (row['NIP'] || '').toString().trim(),
+          tempatLahir: '', tanggalLahir: normalizeTanggalLahir(row['Tanggal Lahir']), email: '',
+          jenisKelamin: normalizeJenisKelamin(row['Jenis Kelamin']),
+          pendidikan: normalizePendidikan(row['Pendidikan']),
+          profesi: (row['Profesi'] || '').toString().trim(),
+          statusPekerjaan: normalizeStatusPekerjaan(row['Status']),
+          jabatanSK: (row['Jabatan Sesuai SK'] || '').toString().trim(),
+          jabatanRuangan: (row['Jabatan Saat Ini'] || '').toString().trim(),
+          keterangan: '',
+          nomorSTR: (row['Nomor STR'] || '').toString().trim(), tglKadaluarsaSTR: '', linkDokumenSTR: '',
+          nomorSIPA: (row['Nomor SIPA'] || '').toString().trim(), tglKadaluarsaSIPA: '', linkDokumenSIPA: ''
+        });
+        imported++;
+      });
+
+      if(imported > 0) await saveData();
+      render();
+      alert(`Berhasil mengimpor ${imported} data staf.${skipped > 0 ? ` (${skipped} baris dilewati karena nama kosong/contoh)` : ''}`);
+    }catch(err){
+      console.error('Gagal impor file', err);
+      alert('Gagal membaca file. Pastikan menggunakan template yang disediakan dan formatnya tidak diubah.');
+    }finally{
+      e.target.value = '';
+    }
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+async function saveData(){
+  try{
+    await dataStore.setList('Staff', 'staff-list', state.staff);
+  }catch(e){
+    console.error('Gagal menyimpan data', e);
+    alert('Gagal menyimpan data. Coba lagi.');
+  }
+}
+
+function docStatus(expiryDate){
+  if(!expiryDate) return null;
+  const d = daysUntil(expiryDate);
+  if(d === null) return null;
+  return d < 0 ? 'tidak-aktif' : 'aktif';
+}
+
+function renderDocCell(nomor, expiryDate){
+  if(!nomor && !expiryDate) return '<span class="sub">—</span>';
+  const status = docStatus(expiryDate);
+  const badge = status === 'aktif'
+    ? '<span class="badge aktif">Aktif</span>'
+    : status === 'tidak-aktif'
+      ? '<span class="badge tidak-aktif">Tidak Aktif</span>'
+      : '';
+  return `
+    ${nomor ? `<div>${escapeHtml(nomor)}</div>` : '<div class="sub">Nomor belum diisi</div>'}
+    ${expiryDate ? `<div class="sub">s.d. ${formatTanggal(expiryDate)}</div>` : ''}
+    ${badge ? `<div style="margin-top:3px;">${badge}</div>` : ''}
+  `;
+}
+
+function statusBadgeClass(status){
+  switch(status){
+    case 'PNS': return 'pns';
+    case 'PPPK': return 'pppk';
+    case 'PPPK Paruh Waktu': return 'pppkp';
+    case 'BLUD': return 'blud';
+    case 'PT': return 'pt';
+    default: return 'pt';
+  }
+}
+
+function escapeHtml(str){
+  if(str === undefined || str === null) return '';
+  return String(str).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+}
+
+function getFiltered(){
+  const q = state.search.trim().toLowerCase();
+  return state.staff.filter(s => {
+    if(state.filterStatus && s.statusPekerjaan !== state.filterStatus) return false;
+    if(state.filterPendidikan && s.pendidikan !== state.filterPendidikan) return false;
+    if(state.filterProfesi === 'S2 Farmasi'){
+      if((s.pendidikan||'').trim().toLowerCase() !== 'S2 Farmasi + Apoteker'.toLowerCase()) return false;
+    } else if(state.filterProfesi && (s.profesi||'').trim().toLowerCase() !== state.filterProfesi.toLowerCase()) return false;
+    if(!q) return true;
+    const hay = [s.nama, s.nip, s.email, s.jabatanSK, s.jabatanRuangan, s.tempatLahir].join(' ').toLowerCase();
+    return hay.includes(q);
+  }).sort((a,b) => (a.nama||'').localeCompare(b.nama||''));
+}
+
+function computeStats(){
+  const total = state.staff.length;
+  const byStatus = {};
+  STATUS_OPTIONS.forEach(s => byStatus[s] = 0);
+  state.staff.forEach(s => { if(byStatus[s.statusPekerjaan] !== undefined) byStatus[s.statusPekerjaan]++; });
+  const perempuan = state.staff.filter(s => s.jenisKelamin === 'P').length;
+  const lakiLaki = state.staff.filter(s => s.jenisKelamin === 'L').length;
+  const byProfesi = {};
+  PROFESI_CATEGORIES.forEach(p => byProfesi[p] = 0);
+  state.staff.forEach(s => {
+    if((s.pendidikan || '').trim().toLowerCase() === 'S2 Farmasi + Apoteker'.toLowerCase()){
+      byProfesi['S2 Farmasi']++;
+      return;
+    }
+    const p = (s.profesi || '').trim();
+    const matched = PROFESI_CATEGORIES.find(c => c.toLowerCase() === p.toLowerCase());
+    if(matched && matched !== 'S2 Farmasi') byProfesi[matched]++;
+  });
+  return { total, byStatus, perempuan, lakiLaki, byProfesi };
+}
+
+function render(){
+  const app = document.getElementById('app');
+  if(state.loading){
+    app.innerHTML = `<div style="padding:80px 0; text-align:center; color:var(--ink-soft); font-family:'Inter',sans-serif;">Memuat data staf…</div>`;
+    return;
+  }
+  if(state.screen === 'landing'){
+    renderLanding();
+  } else if(state.screen === 'cuti'){
+    renderCuti();
+  } else if(state.screen === 'rekap-cuti'){
+    renderRekapCuti();
+  } else if(state.screen === 'informasi-surat'){
+    renderInformasiSurat();
+  } else {
+    renderDashboard();
+  }
+  if(state.modal === 'login') renderLoginModal();
+  if(state.modal === 'form') renderFormModal();
+  if(state.modal === 'delete') renderDeleteModal();
+  if(state.modal === 'guide') renderGuideModal();
+  if(state.modal === 'cuti-form') renderCutiFormModal();
+  if(state.modal === 'cuti-delete') renderCutiDeleteModal();
+  if(state.modal === 'libur') renderLiburModal();
+  if(state.modal === 'surat-edit') renderSuratEditModal();
+  if(state.modal === 'surat-delete') renderSuratDeleteModal();
+}
+
+function renderDashboard(){
+  const app = document.getElementById('app');
+
+  const stats = computeStats();
+  const filtered = getFiltered();
+  const reminders = getExpiryReminders();
+  const hasExpired = reminders.some(r => r.sisaHari < 0);
+
+  const reminderHtml = reminders.length === 0 ? '' : `
+    <div class="reminder-card ${hasExpired ? '' : 'warn'}">
+      <div class="reminder-head">
+        <p class="reminder-title ${hasExpired ? '' : 'warn'}">🔔 Pengingat Kadaluarsa STR / SIPA</p>
+        <span class="sub">${reminders.length} item</span>
+      </div>
+      <p class="reminder-sub">Menampilkan STR &amp; SIPA yang sudah lewat tanggal atau akan kadaluarsa dalam ${REMINDER_THRESHOLD_DAYS} hari ke depan.</p>
+      <div class="reminder-list">
+        ${reminders.map(r => `
+          <div class="reminder-item">
+            <div>
+              <span class="who">${escapeHtml(r.nama)}</span>
+              <span class="doc"> — ${r.jenis}${r.nomor ? ' ' + escapeHtml(r.nomor) : ''} · kadaluarsa ${formatTanggal(r.tanggal)}${r.link ? ` · <a href="${escapeHtml(r.link)}" target="_blank" rel="noopener" style="color:var(--teal-2);">lihat dokumen</a>` : ''}</span>
+            </div>
+            <span class="reminder-status ${r.sisaHari < 0 ? 'expired' : 'soon'}">
+              ${r.sisaHari < 0 ? `Lewat ${Math.abs(r.sisaHari)} hari` : (r.sisaHari === 0 ? 'Hari ini' : `${r.sisaHari} hari lagi`)}
+            </span>
+          </div>
+        `).join('')}
+      </div>
+    </div>
+  `;
+
+  app.innerHTML = `
+    <div class="topbar">
+      <div>
+        <button class="home-link" id="btn-home">← Beranda</button>
+        <p class="brand-eyebrow">Rekam Kepegawaian</p>
+        <h1 class="brand-title">Database Staf</h1>
+        <p class="brand-sub">Data staf, kualifikasi, dan status kepegawaian dalam satu tempat.</p>
+      </div>
+      <div class="admin-zone">
+        <span class="pill ${state.isAdmin ? 'on' : ''}"><span class="dot"></span>${state.isAdmin ? 'Mode Super Admin' : 'Mode Lihat'}</span>
+        ${state.isAdmin
+          ? `<button class="btn secondary small" id="btn-logout">Keluar</button>`
+          : `<button class="btn secondary small" id="btn-login">Masuk sebagai Admin</button>`}
+      </div>
+    </div>
+
+    ${reminderHtml}
+
+    <div class="stats">
+      <div class="stat clickable ${(!state.filterStatus && !state.filterPendidikan && !state.filterProfesi) ? 'active':''}" data-stat-total="1"><div class="num">${stats.total}</div><div class="label">Total staf</div></div>
+      <div class="stat clickable ${state.filterStatus==='PNS' ? 'active':''}" data-stat-status="PNS"><div class="num">${stats.byStatus['PNS']}</div><div class="label">PNS</div></div>
+      <div class="stat clickable ${state.filterStatus==='PPPK' ? 'active':''}" data-stat-status="PPPK"><div class="num">${stats.byStatus['PPPK']}</div><div class="label">PPPK</div></div>
+      <div class="stat clickable ${state.filterStatus==='PPPK Paruh Waktu' ? 'active':''}" data-stat-status="PPPK Paruh Waktu"><div class="num">${stats.byStatus['PPPK Paruh Waktu']}</div><div class="label">PPPK Paruh Waktu</div></div>
+      <div class="stat clickable ${state.filterStatus==='BLUD' ? 'active':''}" data-stat-status="BLUD"><div class="num">${stats.byStatus['BLUD']}</div><div class="label">BLUD</div></div>
+      <div class="stat clickable ${state.filterStatus==='PT' ? 'active':''}" data-stat-status="PT"><div class="num">${stats.byStatus['PT']}</div><div class="label">PT</div></div>
+    </div>
+
+    <p class="section-label">Pengelompokan Profesi</p>
+    <div class="stats">
+      ${PROFESI_CATEGORIES.map(cat => `
+        <div class="stat clickable ${state.filterProfesi===cat ? 'active':''}" data-stat-profesi="${escapeHtml(cat)}"><div class="num">${stats.byProfesi[cat]}</div><div class="label">${escapeHtml(cat)}</div></div>
+      `).join('')}
+    </div>
+
+    <div class="toolbar">
+      <div class="search"><input type="text" id="search-input" placeholder="Cari nama, email, jabatan…" value="${escapeHtml(state.search)}"></div>
+      <select class="filter" id="filter-status">
+        <option value="">Semua status</option>
+        ${STATUS_OPTIONS.map(s => `<option value="${s}" ${state.filterStatus===s?'selected':''}>${s}</option>`).join('')}
+      </select>
+      <select class="filter" id="filter-pendidikan">
+        <option value="">Semua pendidikan</option>
+        ${PENDIDIKAN_OPTIONS.map(s => `<option value="${escapeHtml(s)}" ${state.filterPendidikan===s?'selected':''}>${s}</option>`).join('')}
+      </select>
+      ${state.isAdmin ? `
+        <button class="btn secondary" id="btn-template">⬇ Unduh Template</button>
+        <button class="btn secondary" id="btn-import">⬆ Upload Data Staf</button>
+        <input type="file" id="import-file" accept=".xlsx,.xls" style="display:none;">
+        <button class="btn secondary" id="btn-export">⬇ Unduh Excel</button>
+        <button class="btn" id="btn-add">+ Tambah Staf</button>
+      ` : ''}
+    </div>
+
+    <div class="table-card">
+      <table>
+        <thead>
+          <tr>
+            <th>Nama</th>
+            <th>Jenis kelamin</th>
+            <th>Pendidikan</th>
+            <th>Status</th>
+            <th>STR</th>
+            <th>SIPA</th>
+            <th>Jabatan ruangan</th>
+            <th>Keterangan</th>
+            ${state.isAdmin ? '<th></th>' : ''}
+          </tr>
+        </thead>
+        <tbody>
+          ${filtered.length === 0 ? `
+            <tr class="empty-row">
+              <td colspan="${state.isAdmin ? 9 : 8}">
+                <div class="big">${state.staff.length === 0 ? 'Belum ada data staf' : 'Tidak ada hasil'}</div>
+                <div>${state.staff.length === 0
+                  ? (state.isAdmin ? 'Klik "Tambah Staf" untuk mulai mengisi.' : 'Data akan muncul di sini setelah admin menambahkannya.')
+                  : 'Coba ubah kata kunci atau filter pencarian.'}</div>
+              </td>
+            </tr>` : filtered.map(s => `
+            <tr>
+              <td>
+                <div class="nama-cell">${escapeHtml(s.nama)}</div>
+                ${s.nip ? `<div class="sub">NIP ${escapeHtml(s.nip)}</div>` : ''}
+              </td>
+              <td>${s.jenisKelamin === 'L' ? 'Laki-laki' : s.jenisKelamin === 'P' ? 'Perempuan' : '—'}</td>
+              <td>${escapeHtml(s.pendidikan)}</td>
+              <td><span class="badge ${statusBadgeClass(s.statusPekerjaan)}">${escapeHtml(s.statusPekerjaan)}</span></td>
+              <td>${renderDocCell(s.nomorSTR, s.tglKadaluarsaSTR)}</td>
+              <td>${renderDocCell(s.nomorSIPA, s.tglKadaluarsaSIPA)}</td>
+              <td>${escapeHtml(s.jabatanRuangan)}</td>
+              <td>${escapeHtml(s.keterangan) || '<span class="sub">—</span>'}</td>
+              ${state.isAdmin ? `
+              <td>
+                <div class="row-actions">
+                  <button class="btn secondary small" data-edit="${s.id}">Edit</button>
+                  <button class="btn danger small" data-delete="${s.id}">Hapus</button>
+                </div>
+              </td>` : ''}
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+    </div>
+
+    <p class="footnote">Menampilkan ${filtered.length} dari ${state.staff.length} staf. ${state.isAdmin ? 'Perubahan tersimpan otomatis dan terlihat oleh semua orang yang membuka dashboard ini.' : 'Hanya super admin yang dapat mengubah data ini.'}</p>
+  `;
+
+  attachListeners();
+}
+
+function renderCuti(){
+  const app = document.getElementById('app');
+  const year = state.cutiYear;
+  const month = state.cutiMonth;
+  const totalDays = daysInMonth(year, month);
+  const dayNumbers = Array.from({length: totalDays}, (_, i) => i + 1);
+  const dayInfo = dayNumbers.map(d => {
+    const dateObj = new Date(year, month - 1, d);
+    const dateStr = formatDateISO(dateObj);
+    return {
+      day: d,
+      isSunday: dateObj.getDay() === 0,
+      isHoliday: state.liburNasional.includes(dateStr)
+    };
+  });
+
+  const rows = [...state.cutiStaf].sort((a,b) => (a.namaPetugas||'').localeCompare(b.namaPetugas||''));
+
+  app.innerHTML = `
+    <div class="topbar">
+      <div>
+        <button class="home-link" id="btn-home">← Beranda</button>
+        <p class="brand-eyebrow">Rekam Kepegawaian</p>
+        <h1 class="brand-title">Cuti Staf Instalasi Farmasi</h1>
+        <p class="brand-sub">Rekap cuti tahunan, cuti sakit, dan cuti melahirkan staf per bulan.</p>
+      </div>
+      <div class="admin-zone">
+        <span class="pill ${state.isAdmin ? 'on' : ''}"><span class="dot"></span>${state.isAdmin ? 'Mode Super Admin' : 'Mode Lihat'}</span>
+        ${state.isAdmin
+          ? `<button class="btn secondary small" id="btn-logout">Keluar</button>`
+          : `<button class="btn secondary small" id="btn-login">Masuk sebagai Admin</button>`}
+      </div>
+    </div>
+
+    <div class="month-nav">
+      <button id="cuti-prev">←</button>
+      <div class="month-label">${BULAN_NAMES[month - 1]} ${year}</div>
+      <button id="cuti-next">→</button>
+    </div>
+
+    <div class="toolbar" style="justify-content:flex-end;">
+      <button class="btn secondary" id="btn-rekap-cuti">📋 Daftar Staf Ambil Cuti</button>
+      ${state.isAdmin ? `
+        <button class="btn secondary" id="btn-libur">📅 Kelola Hari Libur Nasional</button>
+        <button class="btn" id="btn-cuti-add">+ Tambah Cuti</button>
+      ` : ''}
+    </div>
+
+    <div class="table-card">
+      <div class="cuti-table-wrap">
+        <table class="cuti-table">
+          <thead>
+            <tr>
+              <th class="no-col">No</th>
+              <th class="nama-col">Nama Petugas</th>
+              <th class="ruangan-col">Depo/Ruangan</th>
+              <th class="ruangan-col">Keterangan</th>
+              <th class="ruangan-col">Shift</th>
+              ${dayInfo.map(info => `<th class="${info.isHoliday ? 'day-header-holiday' : info.isSunday ? 'day-header-sunday' : ''}">${info.day}</th>`).join('')}
+              <th class="total-col">Total Hari</th>
+              ${state.isAdmin ? '<th class="aksi-col"></th>' : ''}
+            </tr>
+          </thead>
+          <tbody>
+            ${rows.length === 0 ? `
+              <tr><td colspan="${6 + totalDays + (state.isAdmin ? 1 : 0)}" style="padding:36px; color:var(--ink-soft); text-align:center;">
+                Belum ada data cuti untuk bulan ini.${state.isAdmin ? ' Klik "Tambah Cuti" untuk mulai mengisi.' : ''}
+              </td></tr>
+            ` : rows.map((r, idx) => {
+              const takenDays = getDayNumbersForEntry(r, year, month);
+              const total = countCutiDays(r, state.liburNasional);
+              return `
+                <tr>
+                  <td class="no-col">${idx + 1}</td>
+                  <td class="nama-col">${escapeHtml(r.namaPetugas)}${r.status === 'Selesai' ? '<div class="sub" style="color:var(--ok);">✓ Selesai</div>' : '<div class="sub">Berjalan</div>'}</td>
+                  <td class="ruangan-col">${escapeHtml(r.depoRuangan)}</td>
+                  <td class="ruangan-col"><span class="badge ${keteranganCutiBadgeClass(r.keterangan)}">${escapeHtml(r.keterangan)}</span></td>
+                  <td class="ruangan-col">${escapeHtml(r.shift) || '<span class="sub">—</span>'}</td>
+                  ${dayNumbers.map(d => {
+                    const found = takenDays.find(x => x.day === d);
+                    const info = dayInfo.find(x => x.day === d);
+                    if(!found){
+                      const cls = info.isHoliday ? 'day-cell-holiday' : info.isSunday ? 'day-cell-sunday' : '';
+                      return `<td class="day-cell ${cls}"></td>`;
+                    }
+                    return `<td class="day-cell ${found.counted ? 'taken' : 'taken-excluded'}" title="${found.counted ? 'Dihitung' : 'Tidak dihitung (akhir pekan/libur)'}">${d}</td>`;
+                  }).join('')}
+                  <td class="total-col">${total}</td>
+                  ${state.isAdmin ? `
+                    <td class="aksi-col">
+                      <div class="row-actions">
+                        <button class="btn secondary small" data-cuti-edit="${r.id}">Edit</button>
+                        <button class="btn ${r.status === 'Selesai' ? 'secondary' : ''} small" data-cuti-toggle-selesai="${r.id}">${r.status === 'Selesai' ? '↺ Berjalan' : '✓ Selesai'}</button>
+                        <button class="btn danger small" data-cuti-delete="${r.id}">Hapus</button>
+                      </div>
+                    </td>
+                  ` : ''}
+                </tr>
+              `;
+            }).join('')}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <p class="footnote">Menampilkan cuti staf untuk bulan ${BULAN_NAMES[month - 1]} ${year}. Kotak merah tua = dihitung sebagai cuti; kotak abu-abu = di dalam rentang tapi tidak dihitung; header/kolom merah muda = hari Minggu; header/kolom pink tua = tanggal libur nasional. ${state.isAdmin ? 'Perubahan tersimpan otomatis dan terlihat oleh semua orang.' : 'Hanya super admin yang dapat mengubah data ini.'}</p>
+  `;
+
+  const btnHome = document.getElementById('btn-home');
+  if(btnHome) btnHome.addEventListener('click', () => { state.screen = 'landing'; render(); });
+  const btnLogin = document.getElementById('btn-login');
+  if(btnLogin) btnLogin.addEventListener('click', () => { state.modal = 'login'; state.loginError = ''; render(); });
+  const btnLogout = document.getElementById('btn-logout');
+  if(btnLogout) btnLogout.addEventListener('click', () => { state.isAdmin = false; render(); });
+
+  document.getElementById('cuti-prev').addEventListener('click', () => {
+    state.cutiMonth--;
+    if(state.cutiMonth < 1){ state.cutiMonth = 12; state.cutiYear--; }
+    render();
+  });
+  document.getElementById('cuti-next').addEventListener('click', () => {
+    state.cutiMonth++;
+    if(state.cutiMonth > 12){ state.cutiMonth = 1; state.cutiYear++; }
+    render();
+  });
+
+  const btnCutiAdd = document.getElementById('btn-cuti-add');
+  if(btnCutiAdd) btnCutiAdd.addEventListener('click', () => { state.cutiEditingId = null; state.modal = 'cuti-form'; render(); });
+
+  const btnLibur = document.getElementById('btn-libur');
+  if(btnLibur) btnLibur.addEventListener('click', () => { state.modal = 'libur'; state.liburInput = ''; render(); });
+  const btnRekapCuti = document.getElementById('btn-rekap-cuti');
+  if(btnRekapCuti) btnRekapCuti.addEventListener('click', () => { state.screen = 'rekap-cuti'; render(); });
+
+  document.querySelectorAll('[data-cuti-edit]').forEach(btn => {
+    btn.addEventListener('click', () => { state.cutiEditingId = btn.getAttribute('data-cuti-edit'); state.modal = 'cuti-form'; render(); });
+  });
+  document.querySelectorAll('[data-cuti-delete]').forEach(btn => {
+    btn.addEventListener('click', () => { state.cutiDeletingId = btn.getAttribute('data-cuti-delete'); state.modal = 'cuti-delete'; render(); });
+  });
+  document.querySelectorAll('[data-cuti-toggle-selesai]').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const id = btn.getAttribute('data-cuti-toggle-selesai');
+      const entry = state.cutiStaf.find(x => x.id === id);
+      if(entry){
+        entry.status = entry.status === 'Selesai' ? 'Berjalan' : 'Selesai';
+        await saveCutiData();
+        render();
+      }
+    });
+  });
+}
+
+function computeRekapCuti(year){
+  const map = {};
+  state.cutiStaf.forEach(entry => {
+    const start = parseDateLocal(entry.tglMulai);
+    if(!start || start.getFullYear() !== year) return;
+    const key = (entry.namaPetugas || '').trim().toLowerCase() + '|' + (entry.depoRuangan || '').trim().toLowerCase();
+    if(!map[key]){
+      map[key] = {
+        namaPetugas: entry.namaPetugas,
+        depoRuangan: entry.depoRuangan,
+        pengajuan: 0,
+        total: 0,
+        breakdown: {}
+      };
+      KETERANGAN_CUTI_OPTIONS.forEach(k => { map[key].breakdown[k] = 0; });
+    }
+    const days = countCutiDays(entry, state.liburNasional);
+    map[key].total += days;
+    map[key].pengajuan++;
+    if(map[key].breakdown[entry.keterangan] !== undefined){
+      map[key].breakdown[entry.keterangan] += days;
+    }
+  });
+  return Object.values(map).sort((a, b) => (a.namaPetugas || '').localeCompare(b.namaPetugas || ''));
+}
+
+function renderRekapCuti(){
+  const app = document.getElementById('app');
+  const year = state.rekapYear;
+  const rekap = computeRekapCuti(year);
+
+  app.innerHTML = `
+    <div class="topbar">
+      <div>
+        <button class="home-link" id="btn-home">← Beranda</button>
+        <p class="brand-eyebrow">Rekam Kepegawaian</p>
+        <h1 class="brand-title">Daftar Staf Instalasi Farmasi Ambil Cuti</h1>
+        <p class="brand-sub">Rekap total hari cuti tiap staf, dihitung sesuai aturan Shift/Non Shift.</p>
+      </div>
+      <div class="admin-zone">
+        <button class="btn secondary small" id="btn-back-cuti">← Kembali ke Cuti Staf</button>
+      </div>
+    </div>
+
+    <div class="month-nav">
+      <button id="rekap-prev">←</button>
+      <div class="month-label">Tahun ${year}</div>
+      <button id="rekap-next">→</button>
+    </div>
+
+    <div class="table-card">
+      <div class="cuti-table-wrap">
+        <table class="cuti-table" style="table-layout:auto;">
+          <thead>
+            <tr>
+              <th class="no-col">No</th>
+              <th class="nama-col">Nama Petugas</th>
+              <th class="ruangan-col">Depo/Ruangan</th>
+              <th>Cuti Tahunan</th>
+              <th>Cuti Sakit</th>
+              <th>Cuti Melahirkan</th>
+              <th>Cuti Menikah</th>
+              <th>Jumlah Pengajuan</th>
+              <th class="total-col">Total Hari Cuti</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${rekap.length === 0 ? `
+              <tr><td colspan="9" style="padding:36px; color:var(--ink-soft); text-align:center;">
+                Belum ada staf yang mengambil cuti pada tahun ${year}.
+              </td></tr>
+            ` : rekap.map((r, idx) => `
+              <tr>
+                <td class="no-col">${idx + 1}</td>
+                <td class="nama-col">${escapeHtml(r.namaPetugas)}</td>
+                <td class="ruangan-col">${escapeHtml(r.depoRuangan)}</td>
+                <td>${r.breakdown['Cuti Tahunan'] || 0}</td>
+                <td>${r.breakdown['Cuti Sakit'] || 0}</td>
+                <td>${r.breakdown['Cuti Melahirkan'] || 0}</td>
+                <td>${r.breakdown['Cuti Menikah'] || 0}</td>
+                <td>${r.pengajuan}</td>
+                <td class="total-col">${r.total}</td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <p class="footnote">Total hari dihitung dari seluruh pengajuan cuti staf sepanjang tahun ${year}, sudah mengecualikan akhir pekan dan libur nasional sesuai aturan Shift/Non Shift masing-masing pengajuan.</p>
+  `;
+
+  const btnHome = document.getElementById('btn-home');
+  if(btnHome) btnHome.addEventListener('click', () => { state.screen = 'landing'; render(); });
+  const btnBackCuti = document.getElementById('btn-back-cuti');
+  if(btnBackCuti) btnBackCuti.addEventListener('click', () => { state.screen = 'cuti'; render(); });
+  document.getElementById('rekap-prev').addEventListener('click', () => { state.rekapYear--; render(); });
+  document.getElementById('rekap-next').addEventListener('click', () => { state.rekapYear++; render(); });
+}
+
+function renderInformasiSurat(){
+  const app = document.getElementById('app');
+  const rows = [...state.suratList].sort((a, b) => new Date(b.uploadedAt || 0) - new Date(a.uploadedAt || 0));
+
+  app.innerHTML = `
+    <div class="topbar">
+      <div>
+        <button class="home-link" id="btn-home">← Beranda</button>
+        <p class="brand-eyebrow">Korespondensi</p>
+        <h1 class="brand-title">Informasi Surat</h1>
+        <p class="brand-sub">Surat-surat ke manajemen — upload PDF, sistem otomatis membaca Nomor, Tanggal, dan Hal surat.</p>
+      </div>
+      <div class="admin-zone">
+        <span class="pill ${state.isAdmin ? 'on' : ''}"><span class="dot"></span>${state.isAdmin ? 'Mode Super Admin' : 'Mode Lihat'}</span>
+        ${state.isAdmin
+          ? `<button class="btn secondary small" id="btn-logout">Keluar</button>`
+          : `<button class="btn secondary small" id="btn-login">Masuk sebagai Admin</button>`}
+      </div>
+    </div>
+
+    ${state.isAdmin ? `
+      <div class="toolbar" style="justify-content:flex-end;">
+        <input type="file" id="surat-file-input" accept="application/pdf,.pdf" style="display:none;">
+        <button class="btn" id="btn-upload-surat" ${state.suratUploading ? 'disabled' : ''}>${state.suratUploading ? (state.suratUploadStatus || 'Memproses…') : '⬆ Upload Surat PDF'}</button>
+      </div>
+    ` : ''}
+
+    <div class="table-card">
+      <table>
+        <thead>
+          <tr>
+            <th>Tanggal Surat</th>
+            <th>Hal</th>
+            <th>Nomor Surat</th>
+            <th>File</th>
+            ${state.isAdmin ? '<th></th>' : ''}
+          </tr>
+        </thead>
+        <tbody>
+          ${rows.length === 0 ? `
+            <tr class="empty-row">
+              <td colspan="${state.isAdmin ? 5 : 4}">
+                <div class="big">Belum ada surat yang diupload</div>
+                <div>${state.isAdmin ? 'Klik "Upload Surat PDF" untuk mulai menambahkan.' : 'Surat akan muncul di sini setelah admin menambahkannya.'}</div>
+              </td>
+            </tr>
+          ` : rows.map(s => `
+            <tr>
+              <td>${escapeHtml(s.tanggalSurat) || '<span class="sub">—</span>'}</td>
+              <td>${escapeHtml(s.hal) || '<span class="sub">—</span>'}</td>
+              <td>${escapeHtml(s.nomorSurat) || '<span class="sub">—</span>'}</td>
+              <td>
+                ${s.linkGoogleDrive
+                  ? `<a href="${escapeHtml(s.linkGoogleDrive)}" target="_blank" rel="noopener" class="btn secondary small" style="text-decoration:none;">📄 Lihat PDF</a>`
+                  : s.fileChunks
+                    ? `<button class="btn secondary small" data-view-surat="${s.id}">📄 Lihat PDF</button>`
+                    : '<span class="sub">Belum ada file</span>'}
+              </td>
+              ${state.isAdmin ? `
+                <td>
+                  <div class="row-actions">
+                    <button class="btn secondary small" data-edit-surat="${s.id}">Edit</button>
+                    <button class="btn danger small" data-delete-surat="${s.id}">Hapus</button>
+                  </div>
+                </td>
+              ` : ''}
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+    </div>
+
+    <p class="footnote">Menampilkan ${rows.length} surat. Tanggal, Hal, dan Nomor Surat terisi otomatis begitu PDF diupload, tanpa perlu diketik ulang — kalau ada hasil bacaan yang kurang tepat, admin bisa memperbaikinya lewat tombol Edit.</p>
+  `;
+
+  const btnHome = document.getElementById('btn-home');
+  if(btnHome) btnHome.addEventListener('click', () => { state.screen = 'landing'; render(); });
+  const btnLogin = document.getElementById('btn-login');
+  if(btnLogin) btnLogin.addEventListener('click', () => { state.modal = 'login'; state.loginError = ''; render(); });
+  const btnLogout = document.getElementById('btn-logout');
+  if(btnLogout) btnLogout.addEventListener('click', () => { state.isAdmin = false; render(); });
+
+  const btnUpload = document.getElementById('btn-upload-surat');
+  const fileInput = document.getElementById('surat-file-input');
+  if(btnUpload && fileInput){
+    btnUpload.addEventListener('click', () => fileInput.click());
+    fileInput.addEventListener('change', e => {
+      const file = e.target.files[0];
+      handleSuratFileSelected(file);
+      e.target.value = '';
+    });
+  }
+
+  document.querySelectorAll('[data-view-surat]').forEach(btn => {
+    btn.addEventListener('click', () => viewSuratFile(btn.getAttribute('data-view-surat')));
+  });
+  document.querySelectorAll('[data-edit-surat]').forEach(btn => {
+    btn.addEventListener('click', () => { state.suratEditingId = btn.getAttribute('data-edit-surat'); state.modal = 'surat-edit'; render(); });
+  });
+  document.querySelectorAll('[data-delete-surat]').forEach(btn => {
+    btn.addEventListener('click', () => { state.suratDeletingId = btn.getAttribute('data-delete-surat'); state.modal = 'surat-delete'; render(); });
+  });
+}
+
+function renderSuratEditModal(){
+  const s = state.suratList.find(x => x.id === state.suratEditingId);
+  if(!s) return;
+  const wrap = document.createElement('div');
+  wrap.className = 'overlay';
+  wrap.id = 'overlay';
+  wrap.innerHTML = `
+    <div class="modal">
+      <button class="close-x" id="modal-close">×</button>
+      <h2>Edit Data Surat</h2>
+      <p class="hint">Perbaiki data surat dari file <strong>${escapeHtml(s.fileName)}</strong> jika hasil bacaan otomatisnya kurang tepat.</p>
+      <div class="field">
+        <label>Tanggal Surat</label>
+        <input type="text" id="sf-tanggal" value="${escapeHtml(s.tanggalSurat)}" placeholder="Contoh: 27 Juli 2026">
+      </div>
+      <div class="field">
+        <label>Hal</label>
+        <input type="text" id="sf-hal" value="${escapeHtml(s.hal)}">
+      </div>
+      <div class="field">
+        <label>Nomor Surat</label>
+        <input type="text" id="sf-nomor" value="${escapeHtml(s.nomorSurat)}">
+      </div>
+      <div class="field">
+        <label>Link Google Drive <span class="opt-tag">(Opsional)</span></label>
+        <input type="url" id="sf-drive" placeholder="https://drive.google.com/…" value="${escapeHtml(s.linkGoogleDrive)}">
+      </div>
+      <div class="modal-actions">
+        <button type="button" class="btn secondary" id="surat-cancel">Batal</button>
+        <button type="button" class="btn" id="surat-save">Simpan Perubahan</button>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(wrap);
+  const cancel = () => {
+    const overlay = document.getElementById('overlay');
+    if(overlay) overlay.remove();
+    state.modal = null;
+    state.suratEditingId = null;
+    render();
+  };
+  document.getElementById('modal-close').addEventListener('click', cancel);
+  document.getElementById('surat-cancel').addEventListener('click', cancel);
+  wrap.addEventListener('click', e => { if(e.target.id === 'overlay') cancel(); });
+
+  document.getElementById('surat-save').addEventListener('click', async () => {
+    s.tanggalSurat = document.getElementById('sf-tanggal').value.trim();
+    s.hal = document.getElementById('sf-hal').value.trim();
+    s.nomorSurat = document.getElementById('sf-nomor').value.trim();
+    s.linkGoogleDrive = document.getElementById('sf-drive').value.trim();
+    await saveSuratList();
+    const overlay = document.getElementById('overlay');
+    if(overlay) overlay.remove();
+    state.modal = null;
+    state.suratEditingId = null;
+    render();
+  });
+}
+
+function renderSuratDeleteModal(){
+  const s = state.suratList.find(x => x.id === state.suratDeletingId);
+  const wrap = document.createElement('div');
+  wrap.className = 'overlay';
+  wrap.id = 'overlay';
+  wrap.innerHTML = `
+    <div class="modal" style="max-width:400px;">
+      <button class="close-x" id="modal-close">×</button>
+      <h2>Hapus surat?</h2>
+      <p class="hint">Surat <strong>${escapeHtml(s ? s.hal : '')}</strong> beserta filenya akan dihapus permanen.</p>
+      <div class="modal-actions">
+        <button class="btn secondary" id="delete-cancel">Batal</button>
+        <button class="btn" id="delete-confirm" style="background:var(--danger); color:#fff; border-color:var(--danger);">Ya, Hapus</button>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(wrap);
+  const cancel = () => {
+    const overlay = document.getElementById('overlay');
+    if(overlay) overlay.remove();
+    state.modal = null;
+    state.suratDeletingId = null;
+    render();
+  };
+  document.getElementById('modal-close').addEventListener('click', cancel);
+  document.getElementById('delete-cancel').addEventListener('click', cancel);
+  wrap.addEventListener('click', e => { if(e.target.id === 'overlay') cancel(); });
+  document.getElementById('delete-confirm').addEventListener('click', async () => {
+    const id = state.suratDeletingId;
+    const entry = state.suratList.find(x => x.id === id);
+    state.suratList = state.suratList.filter(x => x.id !== id);
+    await saveSuratList();
+    try{
+      if(entry && entry.fileChunks){
+        for(let i = 0; i < entry.fileChunks; i++){
+          await window.storage.delete(`surat-file:${id}:${i}`, true);
+        }
+      } else {
+        await window.storage.delete(`surat-file:${id}`, true);
+      }
+    }catch(e){}
+    cancel();
+  });
+}
+
+function renderCutiFormModal(){
+  const editing = state.cutiEditingId ? state.cutiStaf.find(x => x.id === state.cutiEditingId) : null;
+  const r = editing || { namaPetugas:'', depoRuangan:'', keterangan:'', shift:'', tglMulai:'', tglSelesai:'' };
+
+  const wrap = document.createElement('div');
+  wrap.className = 'overlay';
+  wrap.id = 'overlay';
+  wrap.innerHTML = `
+    <div class="modal">
+      <button class="close-x" id="modal-close">×</button>
+      <h2>${editing ? 'Edit Cuti Staf' : 'Tambah Cuti Staf'}</h2>
+      <p class="hint">${editing ? 'Perbarui data cuti di bawah ini.' : 'Lengkapi data cuti staf.'}</p>
+      <form id="cuti-form">
+        <div class="field">
+          <label>Nama Petugas</label>
+          <input type="text" id="cf-nama" value="${escapeHtml(r.namaPetugas)}" required>
+        </div>
+        <div class="field">
+          <label>Depo/Ruangan</label>
+          <input type="text" id="cf-ruangan" value="${escapeHtml(r.depoRuangan)}">
+        </div>
+        <div class="grid2">
+          <div class="field">
+            <label>Keterangan Cuti</label>
+            <select id="cf-keterangan">
+              <option value="">Pilih…</option>
+              ${KETERANGAN_CUTI_OPTIONS.map(o => `<option value="${escapeHtml(o)}" ${r.keterangan===o?'selected':''}>${o}</option>`).join('')}
+            </select>
+          </div>
+          <div class="field">
+            <label>Keterangan Shift</label>
+            <select id="cf-shift">
+              <option value="">Pilih…</option>
+              ${SHIFT_OPTIONS.map(o => `<option value="${escapeHtml(o)}" ${r.shift===o?'selected':''}>${o}</option>`).join('')}
+            </select>
+          </div>
+        </div>
+        <div class="grid2">
+          <div class="field">
+            <label>Tanggal Mulai Cuti</label>
+            <input type="date" id="cf-mulai" value="${escapeHtml(r.tglMulai)}" required>
+          </div>
+          <div class="field">
+            <label>Tanggal Selesai Cuti</label>
+            <input type="date" id="cf-selesai" value="${escapeHtml(r.tglSelesai)}" required>
+          </div>
+        </div>
+        <div class="modal-actions">
+          <button type="button" class="btn secondary" id="form-cancel">Batal</button>
+          <button type="submit" class="btn">${editing ? 'Simpan Perubahan' : 'Tambah Cuti'}</button>
+        </div>
+      </form>
+    </div>
+  `;
+  document.body.appendChild(wrap);
+  document.getElementById('modal-close').addEventListener('click', closeCutiModal);
+  document.getElementById('form-cancel').addEventListener('click', closeCutiModal);
+  wrap.addEventListener('click', e => { if(e.target.id === 'overlay') closeCutiModal(); });
+  document.getElementById('cf-nama').focus();
+
+  document.getElementById('cuti-form').addEventListener('submit', async e => {
+    e.preventDefault();
+    const data = {
+      namaPetugas: document.getElementById('cf-nama').value.trim(),
+      depoRuangan: document.getElementById('cf-ruangan').value.trim(),
+      keterangan: document.getElementById('cf-keterangan').value,
+      shift: document.getElementById('cf-shift').value,
+      tglMulai: document.getElementById('cf-mulai').value,
+      tglSelesai: document.getElementById('cf-selesai').value
+    };
+    if(!data.namaPetugas){ alert('Nama petugas wajib diisi.'); return; }
+    if(!data.tglMulai || !data.tglSelesai){ alert('Tanggal mulai dan selesai cuti wajib diisi.'); return; }
+    if(data.tglSelesai < data.tglMulai){ alert('Tanggal selesai tidak boleh sebelum tanggal mulai.'); return; }
+    if(!data.shift){ alert('Keterangan Shift wajib dipilih agar total hari cuti terhitung dengan benar.'); return; }
+
+    if(editing){
+      const idx = state.cutiStaf.findIndex(x => x.id === editing.id);
+      state.cutiStaf[idx] = { ...editing, ...data };
+    } else {
+      state.cutiStaf.push({ id: uid(), ...data });
+    }
+    closeCutiModal();
+    await saveCutiData();
+    render();
+  });
+}
+
+function renderCutiDeleteModal(){
+  const r = state.cutiStaf.find(x => x.id === state.cutiDeletingId);
+  const wrap = document.createElement('div');
+  wrap.className = 'overlay';
+  wrap.id = 'overlay';
+  wrap.innerHTML = `
+    <div class="modal" style="max-width:400px;">
+      <button class="close-x" id="modal-close">×</button>
+      <h2>Hapus data cuti?</h2>
+      <p class="hint">Data cuti <strong>${escapeHtml(r ? r.namaPetugas : '')}</strong> akan dihapus permanen.</p>
+      <div class="modal-actions">
+        <button class="btn secondary" id="delete-cancel">Batal</button>
+        <button class="btn" id="delete-confirm" style="background:var(--danger); color:#fff; border-color:var(--danger);">Ya, Hapus</button>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(wrap);
+  document.getElementById('modal-close').addEventListener('click', closeCutiModal);
+  document.getElementById('delete-cancel').addEventListener('click', closeCutiModal);
+  wrap.addEventListener('click', e => { if(e.target.id === 'overlay') closeCutiModal(); });
+  document.getElementById('delete-confirm').addEventListener('click', async () => {
+    state.cutiStaf = state.cutiStaf.filter(x => x.id !== state.cutiDeletingId);
+    closeCutiModal();
+    await saveCutiData();
+    render();
+  });
+}
+
+function closeCutiModal(){
+  const overlay = document.getElementById('overlay');
+  if(overlay) overlay.remove();
+  state.modal = null;
+  state.cutiEditingId = null;
+  state.cutiDeletingId = null;
+  render();
+}
+
+function renderLiburModal(){
+  const wrap = document.createElement('div');
+  wrap.className = 'overlay';
+  wrap.id = 'overlay';
+  const sorted = [...state.liburNasional].sort();
+  wrap.innerHTML = `
+    <div class="modal" style="max-width:440px;">
+      <button class="close-x" id="modal-close">×</button>
+      <h2>📅 Hari Libur Nasional</h2>
+      <p class="hint">Tanggal di sini akan otomatis tidak dihitung sebagai hari cuti, sesuai aturan Shift/Non Shift.</p>
+      <div class="field">
+        <label>Tambah Tanggal Libur</label>
+        <div style="display:flex; gap:8px;">
+          <input type="date" id="libur-input" style="flex:1;">
+          <button type="button" class="btn small" id="libur-add">Tambah</button>
+        </div>
+      </div>
+      <div style="max-height:240px; overflow-y:auto; display:flex; flex-direction:column; gap:6px; margin-top:14px;">
+        ${sorted.length === 0 ? '<p class="sub" style="text-align:center; padding:16px 0;">Belum ada tanggal libur nasional yang ditambahkan.</p>' : sorted.map(d => `
+          <div style="display:flex; align-items:center; justify-content:space-between; background:#FAFBFA; border:1px solid var(--line); border-radius:8px; padding:8px 12px;">
+            <span style="font-size:13.5px;">${formatTanggal(d)}</span>
+            <button type="button" class="btn danger small" data-libur-remove="${d}">Hapus</button>
+          </div>
+        `).join('')}
+      </div>
+      <div class="modal-actions">
+        <button class="btn" id="libur-close">Selesai</button>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(wrap);
+  document.getElementById('modal-close').addEventListener('click', closeCutiModal);
+  document.getElementById('libur-close').addEventListener('click', closeCutiModal);
+  wrap.addEventListener('click', e => { if(e.target.id === 'overlay') closeCutiModal(); });
+
+  document.getElementById('libur-add').addEventListener('click', async () => {
+    const val = document.getElementById('libur-input').value;
+    if(!val){ alert('Pilih tanggal terlebih dahulu.'); return; }
+    if(state.liburNasional.includes(val)){ alert('Tanggal tersebut sudah ada dalam daftar.'); return; }
+    state.liburNasional.push(val);
+    await saveLiburNasional();
+    render();
+  });
+
+  document.querySelectorAll('[data-libur-remove]').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const val = btn.getAttribute('data-libur-remove');
+      state.liburNasional = state.liburNasional.filter(d => d !== val);
+      await saveLiburNasional();
+      render();
+    });
+  });
+}
+
+function renderLanding(){
+  const app = document.getElementById('app');
+  app.innerHTML = `
+    <div class="landing-wrap">
+      <div class="hero">
+        <div class="hero-inner">
+          <h1>Selamat Datang di <span class="highlight">Platform Digital Instalasi Farmasi</span></h1>
+          <p class="hero-sub">RSUD A.M. Parikesit</p>
+          <div class="hero-logo">
+            <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+              <rect x="40" y="12" width="20" height="76" rx="7" fill="var(--teal)"/>
+              <rect x="12" y="40" width="76" height="20" rx="7" fill="var(--teal)"/>
+            </svg>
+          </div>
+        </div>
+      </div>
+
+      <p class="orbit-label">Menu Utama</p>
+      <div class="orbit-grid">
+        <div class="orbit-top-popup ${state.farmasiMenuOpen ? 'open' : ''}">
+          <button class="orbit-circle-btn" id="btn-database-staf">Database<br>Staf</button>
+        </div>
+        <div class="orbit-left-popup ${state.farmasiMenuOpen ? 'open' : ''}">
+          <button class="orbit-circle-btn" id="btn-informasi-surat">Informasi<br>Surat</button>
+        </div>
+        <div class="orbit-center">
+          <button class="orbit-circle-btn" id="btn-instalasi-farmasi">
+            <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+              <rect x="40" y="12" width="20" height="76" rx="7" fill="#fff"/>
+              <rect x="12" y="40" width="76" height="20" rx="7" fill="#fff"/>
+            </svg>
+            Instalasi<br>Farmasi
+          </button>
+        </div>
+        <div class="orbit-right-popup ${state.farmasiMenuOpen ? 'open' : ''}">
+          <button class="orbit-circle-btn" id="btn-cuti-staf">Cuti Staf<br>Instalasi Farmasi</button>
+        </div>
+        <div class="orbit-slot-empty orbit-slot-bottom"></div>
+      </div>
+    </div>
+  `;
+
+  document.getElementById('btn-instalasi-farmasi').addEventListener('click', () => {
+    state.farmasiMenuOpen = !state.farmasiMenuOpen;
+    render();
+  });
+  document.getElementById('btn-database-staf').addEventListener('click', () => {
+    state.farmasiMenuOpen = false;
+    state.screen = 'dashboard';
+    render();
+  });
+  document.getElementById('btn-cuti-staf').addEventListener('click', () => {
+    state.farmasiMenuOpen = false;
+    state.screen = 'cuti';
+    render();
+  });
+  document.getElementById('btn-informasi-surat').addEventListener('click', () => {
+    state.farmasiMenuOpen = false;
+    state.screen = 'informasi-surat';
+    render();
+  });
+}
+
+function renderGuideModal(){
+  const wrap = document.createElement('div');
+  wrap.className = 'overlay';
+  wrap.id = 'overlay';
+  wrap.innerHTML = `
+    <div class="modal" style="max-width:480px;">
+      <button class="close-x" id="modal-close">×</button>
+      <h2>📘 Panduan Penggunaan</h2>
+      <p class="hint">Cara singkat menggunakan Database Staf.</p>
+      <div style="font-size:13.5px; line-height:1.7; color:var(--ink);">
+        <p><strong>Untuk semua orang:</strong> klik "Lihat Database" untuk melihat data staf, mencari, dan memfilter. Tidak perlu login.</p>
+        <p><strong>Untuk super admin:</strong> klik "Login Admin", masukkan kata sandi, lalu Anda bisa menambah, mengedit, menghapus staf, mengunduh/mengunggah data lewat Excel.</p>
+        <p><strong>Upload massal:</strong> unduh template Excel dari menu "Unduh Template", isi data staf di dalamnya, lalu upload lewat tombol "Upload Data Staf" setelah login sebagai admin.</p>
+      </div>
+      <div class="modal-actions">
+        <button class="btn" id="guide-close">Mengerti</button>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(wrap);
+  document.getElementById('modal-close').addEventListener('click', closeModal);
+  document.getElementById('guide-close').addEventListener('click', closeModal);
+  wrap.addEventListener('click', e => { if(e.target.id === 'overlay') closeModal(); });
+}
+
+function formatTanggal(val){
+  if(!val) return '';
+  try{
+    const d = new Date(val + 'T00:00:00');
+    if(isNaN(d.getTime())) return val;
+    return d.toLocaleDateString('id-ID', { day:'numeric', month:'long', year:'numeric' });
+  }catch(e){ return val; }
+}
+
+function attachListeners(){
+  const btnHome = document.getElementById('btn-home');
+  if(btnHome) btnHome.addEventListener('click', () => { state.screen = 'landing'; render(); });
+
+  const searchInput = document.getElementById('search-input');
+  if(searchInput){
+    searchInput.addEventListener('input', e => {
+      const pos = e.target.selectionStart;
+      state.search = e.target.value;
+      render();
+      restoreCursor('search-input', pos);
+    });
+  }
+  const fStatus = document.getElementById('filter-status');
+  if(fStatus) fStatus.addEventListener('change', e => { state.filterStatus = e.target.value; render(); });
+  const fPend = document.getElementById('filter-pendidikan');
+  if(fPend) fPend.addEventListener('change', e => { state.filterPendidikan = e.target.value; render(); });
+
+  const totalCard = document.querySelector('[data-stat-total]');
+  if(totalCard){
+    totalCard.addEventListener('click', () => {
+      state.filterStatus = '';
+      state.filterPendidikan = '';
+      state.filterProfesi = '';
+      render();
+      const tableCard = document.querySelector('.table-card');
+      if(tableCard) tableCard.scrollIntoView({ behavior:'smooth', block:'start' });
+    });
+  }
+
+  document.querySelectorAll('[data-stat-status]').forEach(card => {
+    card.addEventListener('click', () => {
+      const val = card.getAttribute('data-stat-status');
+      state.filterStatus = (state.filterStatus === val) ? '' : val;
+      render();
+      const tableCard = document.querySelector('.table-card');
+      if(tableCard) tableCard.scrollIntoView({ behavior:'smooth', block:'start' });
+    });
+  });
+
+  document.querySelectorAll('[data-stat-profesi]').forEach(card => {
+    card.addEventListener('click', () => {
+      const val = card.getAttribute('data-stat-profesi');
+      state.filterProfesi = (state.filterProfesi === val) ? '' : val;
+      render();
+      const tableCard = document.querySelector('.table-card');
+      if(tableCard) tableCard.scrollIntoView({ behavior:'smooth', block:'start' });
+    });
+  });
+
+  const btnLogin = document.getElementById('btn-login');
+  if(btnLogin) btnLogin.addEventListener('click', () => { state.modal = 'login'; state.loginError = ''; render(); });
+  const btnLogout = document.getElementById('btn-logout');
+  if(btnLogout) btnLogout.addEventListener('click', () => { state.isAdmin = false; render(); });
+  const btnAdd = document.getElementById('btn-add');
+  if(btnAdd) btnAdd.addEventListener('click', () => { state.editingId = null; state.modal = 'form'; render(); });
+  const btnExport = document.getElementById('btn-export');
+  if(btnExport) btnExport.addEventListener('click', exportToExcel);
+  const btnTemplate = document.getElementById('btn-template');
+  if(btnTemplate) btnTemplate.addEventListener('click', downloadTemplate);
+  const btnImport = document.getElementById('btn-import');
+  const importFile = document.getElementById('import-file');
+  if(btnImport && importFile){
+    btnImport.addEventListener('click', () => importFile.click());
+    importFile.addEventListener('change', handleImportFile);
+  }
+
+  document.querySelectorAll('[data-edit]').forEach(btn => {
+    btn.addEventListener('click', () => { state.editingId = btn.getAttribute('data-edit'); state.modal = 'form'; render(); });
+  });
+  document.querySelectorAll('[data-delete]').forEach(btn => {
+    btn.addEventListener('click', () => { state.deletingId = btn.getAttribute('data-delete'); state.modal = 'delete'; render(); });
+  });
+}
+
+function restoreCursor(id, pos){
+  const el = document.getElementById(id);
+  if(el){
+    el.focus();
+    try{ el.setSelectionRange(pos, pos); }catch(e){}
+  }
+}
+
+function renderLoginModal(){
+  const wrap = document.createElement('div');
+  wrap.className = 'overlay';
+  wrap.id = 'overlay';
+  wrap.innerHTML = `
+    <div class="modal" style="max-width:380px;">
+      <button class="close-x" id="modal-close">×</button>
+      <div class="login-icon">🔑</div>
+      <h2>Masuk sebagai Admin</h2>
+      <p class="hint">Masukkan kata sandi super admin untuk dapat mengedit data.</p>
+      <div class="field">
+        <label>Kata sandi</label>
+        <input type="password" id="login-pass" placeholder="••••••••">
+      </div>
+      ${state.loginError ? `<div class="error-text">${state.loginError}</div>` : ''}
+      <div class="modal-actions">
+        <button class="btn secondary" id="login-cancel">Batal</button>
+        <button class="btn" id="login-submit">Masuk</button>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(wrap);
+  document.getElementById('modal-close').addEventListener('click', closeModal);
+  document.getElementById('login-cancel').addEventListener('click', closeModal);
+  wrap.addEventListener('click', e => { if(e.target.id === 'overlay') closeModal(); });
+  const passInput = document.getElementById('login-pass');
+  passInput.focus();
+  const submit = () => {
+    if(passInput.value === ADMIN_PASSWORD){
+      state.isAdmin = true;
+      if(state.screen === 'landing') state.screen = 'dashboard';
+      closeModal();
+    } else {
+      state.loginError = 'Kata sandi salah. Coba lagi.';
+      state.modal = 'login';
+      render();
+    }
+  };
+  document.getElementById('login-submit').addEventListener('click', submit);
+  passInput.addEventListener('keydown', e => { if(e.key === 'Enter') submit(); });
+}
+
+function renderFormModal(){
+  const editing = state.editingId ? state.staff.find(s => s.id === state.editingId) : null;
+  const s = editing || { nama:'', nip:'', tempatLahir:'', tanggalLahir:'', email:'', jenisKelamin:'', pendidikan:'', profesi:'', statusPekerjaan:'', jabatanSK:'', jabatanRuangan:'', keterangan:'', nomorSTR:'', tglKadaluarsaSTR:'', linkDokumenSTR:'', nomorSIPA:'', tglKadaluarsaSIPA:'', linkDokumenSIPA:'' };
+
+  const wrap = document.createElement('div');
+  wrap.className = 'overlay';
+  wrap.id = 'overlay';
+  wrap.innerHTML = `
+    <div class="modal">
+      <button class="close-x" id="modal-close">×</button>
+      <h2>${editing ? 'Edit Data Staf' : 'Tambah Staf Baru'}</h2>
+      <p class="hint">${editing ? 'Perbarui data staf di bawah ini.' : 'Lengkapi data staf baru.'}</p>
+      <form id="staff-form">
+        <div class="field">
+          <label>Nama staf</label>
+          <input type="text" id="f-nama" value="${escapeHtml(s.nama)}" required>
+        </div>
+        <div class="field">
+          <label>NIP <span class="opt-tag">(Opsional)</span></label>
+          <input type="text" id="f-nip" value="${escapeHtml(s.nip)}">
+        </div>
+        <div class="grid2">
+          <div class="field">
+            <label>Tempat lahir <span class="opt-tag">(Opsional)</span></label>
+            <input type="text" id="f-tempat" value="${escapeHtml(s.tempatLahir)}">
+          </div>
+          <div class="field">
+            <label>Tanggal lahir <span class="opt-tag">(Opsional)</span></label>
+            <input type="date" id="f-tanggal" value="${escapeHtml(s.tanggalLahir)}">
+          </div>
+        </div>
+        <div class="grid2">
+          <div class="field">
+            <label>Email <span class="opt-tag">(Opsional)</span></label>
+            <input type="email" id="f-email" value="${escapeHtml(s.email)}">
+          </div>
+          <div class="field">
+            <label>Jenis kelamin <span class="opt-tag">(Opsional)</span></label>
+            <select id="f-jk">
+              <option value="">Pilih…</option>
+              <option value="L" ${s.jenisKelamin==='L'?'selected':''}>Laki-laki</option>
+              <option value="P" ${s.jenisKelamin==='P'?'selected':''}>Perempuan</option>
+            </select>
+          </div>
+        </div>
+        <div class="grid2">
+          <div class="field">
+            <label>Kualifikasi pendidikan <span class="opt-tag">(Opsional)</span></label>
+            <select id="f-pendidikan">
+              <option value="">Pilih…</option>
+              ${PENDIDIKAN_OPTIONS.map(o => `<option value="${escapeHtml(o)}" ${s.pendidikan===o?'selected':''}>${o}</option>`).join('')}
+            </select>
+          </div>
+          <div class="field">
+            <label>Profesi <span class="opt-tag">(Opsional)</span></label>
+            <input type="text" id="f-profesi" placeholder="Contoh: Apoteker, TTK, Umum, Transporter, SKM, Adminkes" value="${escapeHtml(s.profesi)}">
+          </div>
+        </div>
+        <div class="grid2">
+          <div class="field">
+            <label>Status pekerjaan <span class="opt-tag">(Opsional)</span></label>
+            <select id="f-status">
+              <option value="">Pilih…</option>
+              ${STATUS_OPTIONS.map(o => `<option value="${escapeHtml(o)}" ${s.statusPekerjaan===o?'selected':''}>${o}</option>`).join('')}
+            </select>
+          </div>
+        </div>
+        <div class="grid2">
+          <div class="field">
+            <label>Jabatan sesuai SK <span class="opt-tag">(Opsional)</span></label>
+            <input type="text" id="f-jabatan-sk" value="${escapeHtml(s.jabatanSK)}">
+          </div>
+          <div class="field">
+            <label>Jabatan di ruangan <span class="opt-tag">(Opsional)</span></label>
+            <input type="text" id="f-jabatan-ruangan" value="${escapeHtml(s.jabatanRuangan)}">
+          </div>
+        </div>
+        <div class="field">
+          <label>Keterangan (tambahan) <span class="opt-tag">(Opsional)</span></label>
+          <textarea id="f-keterangan">${escapeHtml(s.keterangan)}</textarea>
+        </div>
+
+        <hr style="border:none; border-top:1px solid var(--line); margin:18px 0 16px;">
+        <p class="hint" style="margin-bottom:14px; font-weight:600; color:var(--teal-2);">Legalitas Profesi <span class="opt-tag" style="font-weight:400;">(Opsional)</span></p>
+        <div class="grid2">
+          <div class="field">
+            <label>Nomor STR <span class="opt-tag">(Opsional)</span></label>
+            <input type="text" id="f-nomor-str" value="${escapeHtml(s.nomorSTR)}">
+          </div>
+          <div class="field">
+            <label>Tanggal kadaluarsa STR <span class="opt-tag">(Opsional)</span></label>
+            <input type="date" id="f-tgl-str" value="${escapeHtml(s.tglKadaluarsaSTR)}">
+          </div>
+        </div>
+        <div class="field">
+          <label>Link scan STR di Google Drive <span class="opt-tag">(Opsional)</span></label>
+          <input type="url" id="f-link-str" placeholder="https://drive.google.com/…" value="${escapeHtml(s.linkDokumenSTR)}">
+        </div>
+        <div class="grid2">
+          <div class="field">
+            <label>Nomor SIPA <span class="opt-tag">(Opsional)</span></label>
+            <input type="text" id="f-nomor-sipa" value="${escapeHtml(s.nomorSIPA)}">
+          </div>
+          <div class="field">
+            <label>Tanggal kadaluarsa SIPA <span class="opt-tag">(Opsional)</span></label>
+            <input type="date" id="f-tgl-sipa" value="${escapeHtml(s.tglKadaluarsaSIPA)}">
+          </div>
+        </div>
+        <div class="field">
+          <label>Link scan SIPA di Google Drive <span class="opt-tag">(Opsional)</span></label>
+          <input type="url" id="f-link-sipa" placeholder="https://drive.google.com/…" value="${escapeHtml(s.linkDokumenSIPA)}">
+        </div>
+        <div class="modal-actions">
+          <button type="button" class="btn secondary" id="form-cancel">Batal</button>
+          <button type="submit" class="btn">${editing ? 'Simpan Perubahan' : 'Tambah Staf'}</button>
+        </div>
+      </form>
+    </div>
+  `;
+  document.body.appendChild(wrap);
+  document.getElementById('modal-close').addEventListener('click', closeModal);
+  document.getElementById('form-cancel').addEventListener('click', closeModal);
+  wrap.addEventListener('click', e => { if(e.target.id === 'overlay') closeModal(); });
+  document.getElementById('f-nama').focus();
+
+  document.getElementById('staff-form').addEventListener('submit', async e => {
+    e.preventDefault();
+    const data = {
+      nama: document.getElementById('f-nama').value.trim(),
+      nip: document.getElementById('f-nip').value.trim(),
+      tempatLahir: document.getElementById('f-tempat').value.trim(),
+      tanggalLahir: document.getElementById('f-tanggal').value,
+      email: document.getElementById('f-email').value.trim(),
+      jenisKelamin: document.getElementById('f-jk').value,
+      pendidikan: document.getElementById('f-pendidikan').value,
+      profesi: document.getElementById('f-profesi').value.trim(),
+      statusPekerjaan: document.getElementById('f-status').value,
+      jabatanSK: document.getElementById('f-jabatan-sk').value.trim(),
+      jabatanRuangan: document.getElementById('f-jabatan-ruangan').value.trim(),
+      keterangan: document.getElementById('f-keterangan').value.trim(),
+      nomorSTR: document.getElementById('f-nomor-str').value.trim(),
+      tglKadaluarsaSTR: document.getElementById('f-tgl-str').value,
+      linkDokumenSTR: document.getElementById('f-link-str').value.trim(),
+      nomorSIPA: document.getElementById('f-nomor-sipa').value.trim(),
+      tglKadaluarsaSIPA: document.getElementById('f-tgl-sipa').value,
+      linkDokumenSIPA: document.getElementById('f-link-sipa').value.trim()
+    };
+    if(!data.nama){ alert('Nama staf wajib diisi.'); return; }
+
+    if(editing){
+      const idx = state.staff.findIndex(x => x.id === editing.id);
+      state.staff[idx] = { ...editing, ...data };
+    } else {
+      state.staff.push({ id: uid(), ...data });
+    }
+    closeModal();
+    await saveData();
+    render();
+  });
+}
+
+function renderDeleteModal(){
+  const s = state.staff.find(x => x.id === state.deletingId);
+  const wrap = document.createElement('div');
+  wrap.className = 'overlay';
+  wrap.id = 'overlay';
+  wrap.innerHTML = `
+    <div class="modal" style="max-width:400px;">
+      <button class="close-x" id="modal-close">×</button>
+      <h2>Hapus data staf?</h2>
+      <p class="hint">Data <strong>${escapeHtml(s ? s.nama : '')}</strong> akan dihapus permanen dari database ini.</p>
+      <div class="modal-actions">
+        <button class="btn secondary" id="delete-cancel">Batal</button>
+        <button class="btn danger" id="delete-confirm" style="background:var(--danger); color:#fff; border-color:var(--danger);">Ya, Hapus</button>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(wrap);
+  document.getElementById('modal-close').addEventListener('click', closeModal);
+  document.getElementById('delete-cancel').addEventListener('click', closeModal);
+  wrap.addEventListener('click', e => { if(e.target.id === 'overlay') closeModal(); });
+  document.getElementById('delete-confirm').addEventListener('click', async () => {
+    state.staff = state.staff.filter(x => x.id !== state.deletingId);
+    closeModal();
+    await saveData();
+    render();
+  });
+}
+
+function closeModal(){
+  const overlay = document.getElementById('overlay');
+  if(overlay) overlay.remove();
+  state.modal = null;
+  state.editingId = null;
+  state.deletingId = null;
+  render();
+}
+
+loadData();
+</script>
+</body>
+</html>
