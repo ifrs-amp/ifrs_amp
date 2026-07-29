@@ -418,13 +418,13 @@ const dataStore = {
   }
 };
 
-async function uploadFileToDrive(base64, fileName){
+async function uploadFileToDrive(base64, fileName, docType, mimeType){
   if(!SHEETS_API_URL) return null;
   try{
     const res = await fetch(SHEETS_API_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-      body: JSON.stringify({ action: 'uploadFile', base64, fileName })
+      body: JSON.stringify({ action: 'uploadFile', base64, fileName, docType, mimeType })
     });
     const data = await res.json();
     if(data && data.url) return data.url;
@@ -855,7 +855,7 @@ async function handleSuratFileSelected(file){
   if(base64 && SHEETS_API_URL){
     state.suratUploadStatus = 'Mengunggah file ke Google Drive…';
     render();
-    const driveUrl = await uploadFileToDrive(base64, file.name);
+    const driveUrl = await uploadFileToDrive(base64, file.name, 'surat', 'application/pdf');
     if(driveUrl){
       entry.linkGoogleDrive = driveUrl;
     } else {
@@ -2280,7 +2280,12 @@ function renderFormModal(){
         </div>
         <div class="field">
           <label>Link scan STR di Google Drive <span class="opt-tag">(Opsional)</span></label>
-          <input type="url" id="f-link-str" placeholder="https://drive.google.com/…" value="${escapeHtml(s.linkDokumenSTR)}">
+          <div style="display:flex; gap:8px;">
+            <input type="url" id="f-link-str" placeholder="https://drive.google.com/…" value="${escapeHtml(s.linkDokumenSTR)}" style="flex:1;">
+            <button type="button" class="btn secondary small" id="btn-upload-str">Upload</button>
+            <input type="file" id="file-upload-str" accept=".pdf,.jpg,.jpeg,.png" style="display:none;">
+          </div>
+          <div class="sub" id="upload-str-status"></div>
         </div>
         <div class="grid2">
           <div class="field">
@@ -2294,7 +2299,12 @@ function renderFormModal(){
         </div>
         <div class="field">
           <label>Link scan SIPA di Google Drive <span class="opt-tag">(Opsional)</span></label>
-          <input type="url" id="f-link-sipa" placeholder="https://drive.google.com/…" value="${escapeHtml(s.linkDokumenSIPA)}">
+          <div style="display:flex; gap:8px;">
+            <input type="url" id="f-link-sipa" placeholder="https://drive.google.com/…" value="${escapeHtml(s.linkDokumenSIPA)}" style="flex:1;">
+            <button type="button" class="btn secondary small" id="btn-upload-sipa">Upload</button>
+            <input type="file" id="file-upload-sipa" accept=".pdf,.jpg,.jpeg,.png" style="display:none;">
+          </div>
+          <div class="sub" id="upload-sipa-status"></div>
         </div>
         <div class="modal-actions">
           <button type="button" class="btn secondary" id="form-cancel">Batal</button>
@@ -2308,6 +2318,47 @@ function renderFormModal(){
   document.getElementById('form-cancel').addEventListener('click', closeModal);
   wrap.addEventListener('click', e => { if(e.target.id === 'overlay') closeModal(); });
   document.getElementById('f-nama').focus();
+
+  function wireDocUpload(btnId, fileInputId, linkInputId, statusId, docType){
+    const btn = document.getElementById(btnId);
+    const fileInput = document.getElementById(fileInputId);
+    if(!btn || !fileInput) return;
+    btn.addEventListener('click', () => fileInput.click());
+    fileInput.addEventListener('change', async (e) => {
+      const file = e.target.files[0];
+      e.target.value = '';
+      if(!file) return;
+      if(!SHEETS_API_URL){
+        alert('Upload otomatis ke Google Drive belum aktif (SHEETS_API_URL belum diisi). Silakan tempel link Google Drive secara manual.');
+        return;
+      }
+      if(file.size > SURAT_MAX_SIZE_BYTES){
+        alert(`Ukuran file (${(file.size / (1024*1024)).toFixed(1)} MB) melebihi batas maksimal 5 MB.`);
+        return;
+      }
+      const statusEl = document.getElementById(statusId);
+      btn.disabled = true;
+      if(statusEl) statusEl.textContent = 'Mengunggah ke Google Drive…';
+      try{
+        const base64 = await fileToBase64(file);
+        const url = await uploadFileToDrive(base64, file.name, docType, file.type || 'application/octet-stream');
+        if(url){
+          document.getElementById(linkInputId).value = url;
+          if(statusEl) statusEl.textContent = '✓ Berhasil diupload.';
+        } else {
+          if(statusEl) statusEl.textContent = '';
+          alert('Gagal mengunggah file ke Google Drive. Coba lagi atau tempel link manual.');
+        }
+      }catch(err){
+        console.error(err);
+        if(statusEl) statusEl.textContent = '';
+        alert('Gagal mengunggah file.');
+      }
+      btn.disabled = false;
+    });
+  }
+  wireDocUpload('btn-upload-str', 'file-upload-str', 'f-link-str', 'upload-str-status', 'str');
+  wireDocUpload('btn-upload-sipa', 'file-upload-sipa', 'f-link-sipa', 'upload-sipa-status', 'sipa');
 
   document.getElementById('staff-form').addEventListener('submit', async e => {
     e.preventDefault();
