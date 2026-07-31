@@ -379,7 +379,7 @@ const ADMIN_PASSWORD = "admin123"; // ganti sesuai kebutuhan Anda
 //    Web app (Execute as: Me, Who has access: Anyone).
 // 3. Salin URL Web App yang muncul, tempel di antara tanda kutip di bawah ini.
 // 4. Kosongkan (biarkan "") jika ingin tetap pakai penyimpanan bawaan.
-const SHEETS_API_URL = "https://script.google.com/macros/s/AKfycbxdi84PpMv4fCmEHeJxV3rwZqx_tGanMrfHWr3_epCyhjrP7-BS8GPQgRAVr8xSwu13/exec";
+const SHEETS_API_URL = "https://script.google.com/macros/s/AKfycbyzlDLBQK5TjQzusMgkM_lmmX8AaA5JIdSwwuylCLVnSFs886TdFvjslC556ZALevw/exec";
 
 async function sheetsGetList(table){
   const res = await fetch(`${SHEETS_API_URL}?action=getList&table=${encodeURIComponent(table)}`);
