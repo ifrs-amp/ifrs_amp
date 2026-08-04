@@ -775,7 +775,7 @@ function base64ToBlobUrl(base64, mime){
   return URL.createObjectURL(blob);
 }
 
-const SURAT_MAX_SIZE_BYTES = 5 * 1024 * 1024; // 5 MB
+const SURAT_MAX_SIZE_BYTES = 10 * 1024 * 1024; // 10 MB
 
 const SURAT_CHUNK_SIZE = 1 * 1024 * 1024; // ~1 MB per bagian, lebih aman dari batas per-item penyimpanan
 
@@ -843,7 +843,7 @@ async function handleSuratFileSelected(file){
     return;
   }
   if(file.size > SURAT_MAX_SIZE_BYTES){
-    alert(`Ukuran file (${(file.size / (1024*1024)).toFixed(1)} MB) melebihi batas maksimal 5 MB. Silakan upload file PDF yang lebih kecil.`);
+    alert(`Ukuran file (${(file.size / (1024*1024)).toFixed(1)} MB) melebihi batas maksimal 10 MB. Silakan upload file PDF yang lebih kecil.`);
     return;
   }
   if(typeof pdfjsLib === 'undefined'){
@@ -1773,7 +1773,7 @@ function renderInformasiSurat(){
       e.target.value = '';
       if(!file) return;
       if(file.size > SURAT_MAX_SIZE_BYTES){
-        alert(`Ukuran file (${(file.size / (1024*1024)).toFixed(1)} MB) melebihi batas maksimal 5 MB.`);
+        alert(`Ukuran file (${(file.size / (1024*1024)).toFixed(1)} MB) melebihi batas maksimal 10 MB.`);
         return;
       }
       if(!SHEETS_API_URL){
@@ -1880,7 +1880,7 @@ function renderSuratEditModal(){
       return;
     }
     if(file.size > SURAT_MAX_SIZE_BYTES){
-      alert(`Ukuran file (${(file.size / (1024*1024)).toFixed(1)} MB) melebihi batas maksimal 5 MB.`);
+      alert(`Ukuran file (${(file.size / (1024*1024)).toFixed(1)} MB) melebihi batas maksimal 10 MB.`);
       return;
     }
     if(!SHEETS_API_URL){
@@ -2549,7 +2549,7 @@ function renderFormModal(){
         return;
       }
       if(file.size > SURAT_MAX_SIZE_BYTES){
-        alert(`Ukuran file (${(file.size / (1024*1024)).toFixed(1)} MB) melebihi batas maksimal 5 MB.`);
+        alert(`Ukuran file (${(file.size / (1024*1024)).toFixed(1)} MB) melebihi batas maksimal 10 MB.`);
         return;
       }
       if(statusEl) statusEl.textContent = 'Mengunggah ke Google Drive…';
