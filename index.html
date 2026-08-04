@@ -217,6 +217,9 @@
   /* Toolbar */
   .toolbar{
     display:flex; flex-wrap:wrap; gap:10px; align-items:center; margin-bottom:16px;
+    position:sticky; top:0; z-index:20; background:var(--bg);
+    padding:12px 0; margin-top:-12px;
+    box-shadow:0 8px 12px -8px rgba(18,63,62,0.08);
   }
   .search{
     flex:1; min-width:200px; position:relative;
@@ -239,9 +242,9 @@
   /* Table */
   .table-card{
     background:var(--paper); border:1px solid var(--line); border-radius:var(--radius);
-    box-shadow:var(--shadow); overflow:hidden;
+    box-shadow:var(--shadow); overflow-x:auto; overflow-y:hidden;
   }
-  table{ width:100%; border-collapse:collapse; font-size:13.3px; }
+  table{ width:100%; min-width:1100px; border-collapse:collapse; font-size:13.3px; }
   thead th{
     text-align:left; padding:11px 14px; font-size:11px; letter-spacing:.06em; text-transform:uppercase;
     color:var(--ink-soft); border-bottom:1px solid var(--line); background:#F8FAF9;
@@ -512,6 +515,7 @@ let state = {
   suratEditingId: null,
   suratUploading: false,
   suratUploadStatus: '',
+  suratSearch: '',
   suratDeletingId: null
 };
 
@@ -1622,7 +1626,14 @@ function renderRekapCuti(){
 
 function renderInformasiSurat(){
   const app = document.getElementById('app');
-  const rows = [...state.suratList].sort((a, b) => new Date(b.uploadedAt || 0) - new Date(a.uploadedAt || 0));
+  const q = state.suratSearch.trim().toLowerCase();
+  const rows = [...state.suratList]
+    .filter(s => {
+      if(!q) return true;
+      const hay = [s.hal, s.nomorSurat, s.fileName, s.tanggalSurat].join(' ').toLowerCase();
+      return hay.includes(q);
+    })
+    .sort((a, b) => new Date(b.uploadedAt || 0) - new Date(a.uploadedAt || 0));
 
   app.innerHTML = `
     <div class="topbar">
@@ -1640,12 +1651,13 @@ function renderInformasiSurat(){
       </div>
     </div>
 
-    ${state.isAdmin ? `
-      <div class="toolbar" style="justify-content:flex-end;">
+    <div class="toolbar">
+      <div class="search"><input type="text" id="surat-search-input" placeholder="Cari nama surat, hal, atau nomor surat…" value="${escapeHtml(state.suratSearch)}"></div>
+      ${state.isAdmin ? `
         <input type="file" id="surat-file-input" accept="application/pdf,.pdf" style="display:none;">
         <button class="btn" id="btn-upload-surat" ${state.suratUploading ? 'disabled' : ''}>${state.suratUploading ? (state.suratUploadStatus || 'Memproses…') : '⬆ Upload Surat PDF'}</button>
-      </div>
-    ` : ''}
+      ` : ''}
+    </div>
 
     <div class="table-card">
       <table>
@@ -1655,15 +1667,18 @@ function renderInformasiSurat(){
             <th>Hal</th>
             <th>Nomor Surat</th>
             <th>File</th>
+            <th>File Asli</th>
             ${state.isAdmin ? '<th></th>' : ''}
           </tr>
         </thead>
         <tbody>
           ${rows.length === 0 ? `
             <tr class="empty-row">
-              <td colspan="${state.isAdmin ? 5 : 4}">
-                <div class="big">Belum ada surat yang diupload</div>
-                <div>${state.isAdmin ? 'Klik "Upload Surat PDF" untuk mulai menambahkan.' : 'Surat akan muncul di sini setelah admin menambahkannya.'}</div>
+              <td colspan="${state.isAdmin ? 6 : 5}">
+                <div class="big">${state.suratList.length === 0 ? 'Belum ada surat yang diupload' : 'Tidak ada hasil'}</div>
+                <div>${state.suratList.length === 0
+                  ? (state.isAdmin ? 'Klik "Upload Surat PDF" untuk mulai menambahkan.' : 'Surat akan muncul di sini setelah admin menambahkannya.')
+                  : 'Coba ubah kata kunci pencarian.'}</div>
               </td>
             </tr>
           ` : rows.map(s => `
@@ -1677,6 +1692,16 @@ function renderInformasiSurat(){
                   : s.fileChunks
                     ? `<button class="btn secondary small" data-view-surat="${s.id}">📄 Lihat PDF</button>`
                     : '<span class="sub">Belum ada file</span>'}
+              </td>
+              <td>
+                <div style="display:flex; gap:6px; align-items:center;">
+                  ${s.linkFileAsli ? `<button class="btn secondary small" data-preview-asli="${s.id}">👁 Lihat</button>` : ''}
+                  ${state.isAdmin ? `
+                    <button class="btn secondary small" data-upload-asli="${s.id}">📝 ${s.linkFileAsli ? 'Ganti' : 'Upload'} File Asli</button>
+                    <input type="file" data-file-asli-input="${s.id}" accept=".doc,.docx,.odt,.rtf,application/pdf,.pdf" style="display:none;">
+                  ` : (!s.linkFileAsli ? '<span class="sub">Belum ada</span>' : '')}
+                </div>
+                <div class="sub" data-asli-status="${s.id}"></div>
               </td>
               ${state.isAdmin ? `
                 <td>
@@ -1692,7 +1717,7 @@ function renderInformasiSurat(){
       </table>
     </div>
 
-    <p class="footnote">Menampilkan ${rows.length} surat. Tanggal, Hal, dan Nomor Surat terisi otomatis begitu PDF diupload, tanpa perlu diketik ulang — kalau ada hasil bacaan yang kurang tepat, admin bisa memperbaikinya lewat tombol Edit.</p>
+    <p class="footnote">Menampilkan ${rows.length} dari ${state.suratList.length} surat. Tanggal, Hal, dan Nomor Surat terisi otomatis begitu PDF diupload, tanpa perlu diketik ulang — kalau ada hasil bacaan yang kurang tepat, admin bisa memperbaikinya lewat tombol Edit.</p>
   `;
 
   const btnHome = document.getElementById('btn-home');
@@ -1701,6 +1726,16 @@ function renderInformasiSurat(){
   if(btnLogin) btnLogin.addEventListener('click', () => { state.modal = 'login'; state.loginError = ''; render(); });
   const btnLogout = document.getElementById('btn-logout');
   if(btnLogout) btnLogout.addEventListener('click', () => { state.isAdmin = false; render(); });
+
+  const suratSearchInput = document.getElementById('surat-search-input');
+  if(suratSearchInput){
+    suratSearchInput.addEventListener('input', e => {
+      const pos = e.target.selectionStart;
+      state.suratSearch = e.target.value;
+      render();
+      restoreCursor('surat-search-input', pos);
+    });
+  }
 
   const btnUpload = document.getElementById('btn-upload-surat');
   const fileInput = document.getElementById('surat-file-input');
@@ -1720,6 +1755,55 @@ function renderInformasiSurat(){
     btn.addEventListener('click', () => {
       const s = state.suratList.find(x => x.id === btn.getAttribute('data-preview-surat'));
       if(s) openFilePreviewModal(s.fileId || s.linkGoogleDrive, s.linkGoogleDrive);
+    });
+  });
+  document.querySelectorAll('[data-preview-asli]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const s = state.suratList.find(x => x.id === btn.getAttribute('data-preview-asli'));
+      if(s) openFilePreviewModal(s.fileIdAsli || s.linkFileAsli, s.linkFileAsli);
+    });
+  });
+  document.querySelectorAll('[data-upload-asli]').forEach(btn => {
+    const id = btn.getAttribute('data-upload-asli');
+    const fileInput = document.querySelector(`[data-file-asli-input="${id}"]`);
+    if(!fileInput) return;
+    btn.addEventListener('click', () => fileInput.click());
+    fileInput.addEventListener('change', async (e) => {
+      const file = e.target.files[0];
+      e.target.value = '';
+      if(!file) return;
+      if(file.size > SURAT_MAX_SIZE_BYTES){
+        alert(`Ukuran file (${(file.size / (1024*1024)).toFixed(1)} MB) melebihi batas maksimal 5 MB.`);
+        return;
+      }
+      if(!SHEETS_API_URL){
+        alert('Upload otomatis ke Google Drive belum aktif.');
+        return;
+      }
+      const s = state.suratList.find(x => x.id === id);
+      if(!s) return;
+      const statusEl = document.querySelector(`[data-asli-status="${id}"]`);
+      btn.disabled = true;
+      if(statusEl) statusEl.textContent = 'Mengunggah…';
+      try{
+        const base64 = await fileToBase64(file);
+        const result = await uploadFileToDrive(base64, file.name, 'surat', file.type || 'application/octet-stream');
+        if(result.url){
+          s.linkFileAsli = result.url;
+          s.fileIdAsli = result.fileId || '';
+          await saveSuratList();
+          if(statusEl) statusEl.textContent = '';
+          render();
+        } else {
+          if(statusEl) statusEl.textContent = '';
+          alert(`Gagal mengunggah file asli.\n\nPenyebab: ${result.error || 'tidak diketahui'}`);
+        }
+      }catch(err){
+        console.error(err);
+        if(statusEl) statusEl.textContent = '';
+        alert('Gagal mengunggah file.');
+      }
+      btn.disabled = false;
     });
   });
   document.querySelectorAll('[data-edit-surat]').forEach(btn => {
