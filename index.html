@@ -385,7 +385,7 @@ const ADMIN_PASSWORD = "admin123"; // ganti sesuai kebutuhan Anda
 const SHEETS_API_URL = "https://script.google.com/macros/s/AKfycbyzlDLBQK5TjQzusMgkM_lmmX8AaA5JIdSwwuylCLVnSFs886TdFvjslC556ZALevw/exec";
 
 async function sheetsGetList(table){
-  const res = await fetch(`${SHEETS_API_URL}?action=getList&table=${encodeURIComponent(table)}`);
+  const res = await fetch(`${SHEETS_API_URL}?action=getList&table=${encodeURIComponent(table)}&_=${Date.now()}`, { cache: 'no-store' });
   const data = await res.json();
   return data; // { table, rows } atau { error }
 }
@@ -610,8 +610,14 @@ function daysInMonth(year, month){ return new Date(year, month, 0).getDate(); }
 
 function parseDateLocal(dateStr){
   if(!dateStr) return null;
-  const d = new Date(dateStr + 'T00:00:00');
+  const datePart = String(dateStr).split('T')[0];
+  const d = new Date(datePart + 'T00:00:00');
   return isNaN(d.getTime()) ? null : d;
+}
+
+function dateOnly(val){
+  if(!val) return '';
+  return String(val).split('T')[0];
 }
 
 function formatDateISO(d){
@@ -2009,11 +2015,11 @@ function renderCutiFormModal(){
         <div class="grid2">
           <div class="field">
             <label>Tanggal Mulai Cuti</label>
-            <input type="date" id="cf-mulai" value="${escapeHtml(r.tglMulai)}" required>
+            <input type="date" id="cf-mulai" value="${escapeHtml(dateOnly(r.tglMulai))}" required>
           </div>
           <div class="field">
             <label>Tanggal Selesai Cuti</label>
-            <input type="date" id="cf-selesai" value="${escapeHtml(r.tglSelesai)}" required>
+            <input type="date" id="cf-selesai" value="${escapeHtml(dateOnly(r.tglSelesai))}" required>
           </div>
         </div>
         <div class="modal-actions">
@@ -2238,7 +2244,8 @@ function renderGuideModal(){
 function formatTanggal(val){
   if(!val) return '';
   try{
-    const d = new Date(val + 'T00:00:00');
+    const datePart = String(val).split('T')[0]; // buang bagian waktu kalau ada (mis. dari ISO datetime lama)
+    const d = new Date(datePart + 'T00:00:00');
     if(isNaN(d.getTime())) return val;
     return d.toLocaleDateString('id-ID', { day:'numeric', month:'long', year:'numeric' });
   }catch(e){ return val; }
@@ -2397,7 +2404,7 @@ function renderFormModal(){
           </div>
           <div class="field">
             <label>Tanggal lahir <span class="opt-tag">(Opsional)</span></label>
-            <input type="date" id="f-tanggal" value="${escapeHtml(s.tanggalLahir)}">
+            <input type="date" id="f-tanggal" value="${escapeHtml(dateOnly(s.tanggalLahir))}">
           </div>
         </div>
         <div class="grid2">
@@ -2460,7 +2467,7 @@ function renderFormModal(){
           </div>
           <div class="field">
             <label>Tanggal kadaluarsa STR <span class="opt-tag">(Opsional)</span></label>
-            <input type="date" id="f-tgl-str" value="${escapeHtml(s.tglKadaluarsaSTR)}">
+            <input type="date" id="f-tgl-str" value="${escapeHtml(dateOnly(s.tglKadaluarsaSTR))}">
           </div>
         </div>
         <div class="field">
@@ -2481,7 +2488,7 @@ function renderFormModal(){
           </div>
           <div class="field">
             <label>Tanggal kadaluarsa SIPA <span class="opt-tag">(Opsional)</span></label>
-            <input type="date" id="f-tgl-sipa" value="${escapeHtml(s.tglKadaluarsaSIPA)}">
+            <input type="date" id="f-tgl-sipa" value="${escapeHtml(dateOnly(s.tglKadaluarsaSIPA))}">
           </div>
         </div>
         <div class="field">
