@@ -842,6 +842,21 @@ async function loadFileChunked(id, chunkCount){
   return combined;
 }
 
+function waitForLib(checkFn, timeoutMs){
+  return new Promise(resolve => {
+    const start = Date.now();
+    const interval = setInterval(() => {
+      if(checkFn()){
+        clearInterval(interval);
+        resolve(true);
+      } else if(Date.now() - start > timeoutMs){
+        clearInterval(interval);
+        resolve(false);
+      }
+    }, 250);
+  });
+}
+
 async function handleSuratFileSelected(file){
   if(!file) return;
   if(file.type !== 'application/pdf' && !file.name.toLowerCase().endsWith('.pdf')){
@@ -852,26 +867,37 @@ async function handleSuratFileSelected(file){
     alert(`Ukuran file (${(file.size / (1024*1024)).toFixed(1)} MB) melebihi batas maksimal 10 MB. Silakan upload file PDF yang lebih kecil.`);
     return;
   }
-  if(typeof pdfjsLib === 'undefined'){
-    alert('Modul pembaca PDF belum siap dimuat. Coba lagi sesaat lagi.');
-    return;
-  }
+
   state.suratUploading = true;
-  state.suratUploadStatus = 'Membaca teks PDF…';
+  state.suratUploadStatus = 'Menyiapkan pembaca PDF…';
   render();
+
+  let pdfReady = typeof pdfjsLib !== 'undefined';
+  if(!pdfReady){
+    pdfReady = await waitForLib(() => typeof pdfjsLib !== 'undefined', 6000);
+  }
 
   let fields = { nomorSurat:'', hal:'', tanggalSurat:'' };
   let usedOcr = false;
-  try{
-    const arrayBuffer = await file.arrayBuffer();
-    const text = await extractPdfFirstPageText(arrayBuffer);
-    fields = extractSuratFields(text);
-  }catch(err){
-    console.error('Gagal membaca isi PDF', err);
+  let skippedExtraction = false;
+
+  if(pdfReady){
+    state.suratUploadStatus = 'Membaca teks PDF…';
+    render();
+    try{
+      const arrayBuffer = await file.arrayBuffer();
+      const text = await extractPdfFirstPageText(arrayBuffer);
+      fields = extractSuratFields(text);
+    }catch(err){
+      console.error('Gagal membaca isi PDF', err);
+    }
+  } else {
+    skippedExtraction = true;
+    console.error('Modul pdf.js tidak berhasil dimuat, upload dilanjutkan tanpa baca otomatis.');
   }
 
   const foundNothing = !fields.tanggalSurat && !fields.hal && !fields.nomorSurat;
-  if(foundNothing && typeof Tesseract !== 'undefined'){
+  if(pdfReady && foundNothing && typeof Tesseract !== 'undefined'){
     usedOcr = true;
     try{
       state.suratUploadStatus = 'Sepertinya ini hasil scan — membaca dengan OCR… 0%';
@@ -931,7 +957,9 @@ async function handleSuratFileSelected(file){
   state.suratUploadStatus = '';
   render();
 
-  if(!fields.tanggalSurat && !fields.hal && !fields.nomorSurat){
+  if(skippedExtraction){
+    alert('Surat berhasil diupload. Modul pembaca PDF tidak berhasil dimuat (kemungkinan koneksi internet lambat atau ada pemblokiran jaringan), jadi Tanggal/Hal/Nomor perlu diisi manual lewat tombol "Edit" pada baris surat tersebut.');
+  } else if(!fields.tanggalSurat && !fields.hal && !fields.nomorSurat){
     alert(`Surat berhasil diupload${usedOcr ? ' (sudah dicoba dengan OCR)' : ''}, tapi sistem tetap tidak menemukan Tanggal/Hal/Nomor secara otomatis dari isi PDF ini. Silakan klik "Edit" pada baris surat tersebut untuk melengkapinya.`);
   }
 }
