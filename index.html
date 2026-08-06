@@ -271,6 +271,8 @@
   .badge.cuti-sakit{ background:var(--danger-soft); color:var(--danger); }
   .badge.cuti-melahirkan{ background:#EDE7F5; color:#5A3E8C; }
   .badge.cuti-menikah{ background:var(--amber-soft); color:#8A5F1E; }
+  .badge.surat-tunda{ background:var(--amber-soft); color:#8A5F1E; }
+  .badge.surat-revisi{ background:#EAF0F8; color:#2E5490; }
 
   /* Cuti table */
   .month-nav{
@@ -487,6 +489,7 @@ const PENDIDIKAN_OPTIONS = ["SMA","SMK","D3 Farmasi","S1 Farmasi","S2 Farmasi + 
 const STATUS_OPTIONS = ["PNS","PPPK","PPPK Paruh Waktu","BLUD","PT"];
 const PROFESI_CATEGORIES = ["Apoteker","TTK","Umum","Transporter","SKM","Adminkes","S2 Farmasi"];
 const KETERANGAN_CUTI_OPTIONS = ["Cuti Tahunan","Cuti Sakit","Cuti Melahirkan","Cuti Menikah"];
+const SURAT_STATUS_OPTIONS = ["Selesai","Tunda","Revisi","Batal"];
 const SHIFT_OPTIONS = ["Shift","Non Shift"];
 const BULAN_NAMES = ["Januari","Februari","Maret","April","Mei","Juni","Juli","Agustus","September","Oktober","November","Desember"];
 
@@ -992,6 +995,14 @@ function keteranganCutiBadgeClass(k){
   if(k === 'Cuti Sakit') return 'cuti-sakit';
   if(k === 'Cuti Melahirkan') return 'cuti-melahirkan';
   if(k === 'Cuti Menikah') return 'cuti-menikah';
+  return '';
+}
+
+function suratStatusBadgeClass(k){
+  if(k === 'Selesai') return 'aktif';
+  if(k === 'Tunda') return 'surat-tunda';
+  if(k === 'Revisi') return 'surat-revisi';
+  if(k === 'Batal') return 'tidak-aktif';
   return '';
 }
 
@@ -1703,13 +1714,14 @@ function renderInformasiSurat(){
             <th>Nomor Surat</th>
             <th>File</th>
             <th>File Asli</th>
+            <th>Keterangan</th>
             ${state.isAdmin ? '<th></th>' : ''}
           </tr>
         </thead>
         <tbody>
           ${rows.length === 0 ? `
             <tr class="empty-row">
-              <td colspan="${state.isAdmin ? 6 : 5}">
+              <td colspan="${state.isAdmin ? 7 : 6}">
                 <div class="big">${state.suratList.length === 0 ? 'Belum ada surat yang diupload' : 'Tidak ada hasil'}</div>
                 <div>${state.suratList.length === 0
                   ? (state.isAdmin ? 'Klik "Upload Surat PDF" untuk mulai menambahkan.' : 'Surat akan muncul di sini setelah admin menambahkannya.')
@@ -1737,6 +1749,16 @@ function renderInformasiSurat(){
                   ` : (!s.linkFileAsli ? '<span class="sub">Belum ada</span>' : '')}
                 </div>
                 <div class="sub" data-asli-status="${s.id}"></div>
+              </td>
+              <td>
+                ${state.isAdmin ? `
+                  <select class="filter" data-surat-status="${s.id}" style="max-width:120px;">
+                    <option value="">Pilih…</option>
+                    ${SURAT_STATUS_OPTIONS.map(o => `<option value="${o}" ${s.keteranganStatus===o?'selected':''}>${o}</option>`).join('')}
+                  </select>
+                ` : (s.keteranganStatus
+                  ? `<span class="badge ${suratStatusBadgeClass(s.keteranganStatus)}">${escapeHtml(s.keteranganStatus)}</span>`
+                  : '<span class="sub">—</span>')}
               </td>
               ${state.isAdmin ? `
                 <td>
@@ -1839,6 +1861,14 @@ function renderInformasiSurat(){
         alert('Gagal mengunggah file.');
       }
       btn.disabled = false;
+    });
+  });
+  document.querySelectorAll('[data-surat-status]').forEach(sel => {
+    sel.addEventListener('change', async () => {
+      const s = state.suratList.find(x => x.id === sel.getAttribute('data-surat-status'));
+      if(!s) return;
+      s.keteranganStatus = sel.value;
+      await saveSuratList();
     });
   });
   document.querySelectorAll('[data-edit-surat]').forEach(btn => {
