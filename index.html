@@ -659,15 +659,22 @@ function isCountedDay(dateObj, shift, holidayList){
   return true; // fallback untuk data lama tanpa keterangan shift
 }
 
+// Kalau Keterangan Cuti-nya "Cuti Melahirkan", hari selalu dihitung penuh —
+// tidak peduli apa pun yang dipilih di kolom Shift.
+function isCountedDayForEntry(dateObj, entry, holidayList){
+  if(entry.keterangan === 'Cuti Melahirkan') return true;
+  return isCountedDay(dateObj, entry.shift, holidayList);
+}
+
 function countCutiDays(entry, holidayList){
   const start = parseDateLocal(entry.tglMulai);
   const end = parseDateLocal(entry.tglSelesai);
   if(!start || !end) return 0;
-  if(!entry.shift) return countDaysInclusive(entry.tglMulai, entry.tglSelesai);
+  if(entry.keterangan !== 'Cuti Melahirkan' && !entry.shift) return countDaysInclusive(entry.tglMulai, entry.tglSelesai);
   let count = 0;
   const cursor = new Date(start);
   while(cursor <= end){
-    if(isCountedDay(cursor, entry.shift, holidayList)) count++;
+    if(isCountedDayForEntry(cursor, entry, holidayList)) count++;
     cursor.setDate(cursor.getDate() + 1);
   }
   return count;
@@ -681,7 +688,7 @@ function getDayNumbersForEntry(entry, year, month){
   const cursor = new Date(start);
   while(cursor <= end){
     if(cursor.getFullYear() === year && (cursor.getMonth() + 1) === month){
-      const counted = entry.shift ? isCountedDay(cursor, entry.shift, state.liburNasional) : true;
+      const counted = (entry.keterangan === 'Cuti Melahirkan' || entry.shift) ? isCountedDayForEntry(cursor, entry, state.liburNasional) : true;
       days.push({ day: cursor.getDate(), counted });
     }
     cursor.setDate(cursor.getDate() + 1);
