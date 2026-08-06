@@ -1453,7 +1453,16 @@ function renderCuti(){
     };
   });
 
-  const rows = [...state.cutiStaf].sort((a,b) => (a.namaPetugas||'').localeCompare(b.namaPetugas||''));
+  const rows = [...state.cutiStaf]
+    .filter(entry => {
+      const start = parseDateLocal(entry.tglMulai);
+      const end = parseDateLocal(entry.tglSelesai);
+      if(!start || !end) return false;
+      const monthStart = new Date(year, month - 1, 1);
+      const monthEnd = new Date(year, month, 0);
+      return start <= monthEnd && end >= monthStart;
+    })
+    .sort((a,b) => (a.namaPetugas||'').localeCompare(b.namaPetugas||''));
 
   app.innerHTML = `
     <div class="topbar">
