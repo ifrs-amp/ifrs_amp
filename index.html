@@ -520,6 +520,8 @@ let state = {
   suratUploading: false,
   suratUploadStatus: '',
   suratSearch: '',
+  suratFilterBulan: '',
+  suratFilterTahun: '',
   suratDeletingId: null
 };
 
@@ -1673,11 +1675,30 @@ function renderRekapCuti(){
 function renderInformasiSurat(){
   const app = document.getElementById('app');
   const q = state.suratSearch.trim().toLowerCase();
+
+  // Kumpulkan daftar tahun yang tersedia dari data surat, untuk isi dropdown Tahun
+  const tahunSet = new Set();
+  state.suratList.forEach(s => {
+    const bt = extractBulanTahun(s.tanggalSurat, s.uploadedAt);
+    if(bt) tahunSet.add(bt.tahun);
+  });
+  const currentYear = new Date().getFullYear();
+  tahunSet.add(currentYear);
+  const tahunOptions = Array.from(tahunSet).sort((a, b) => b - a);
+
   const rows = [...state.suratList]
     .filter(s => {
-      if(!q) return true;
-      const hay = [s.hal, s.nomorSurat, s.fileName, s.tanggalSurat].join(' ').toLowerCase();
-      return hay.includes(q);
+      if(q){
+        const hay = [s.hal, s.nomorSurat, s.fileName, s.tanggalSurat].join(' ').toLowerCase();
+        if(!hay.includes(q)) return false;
+      }
+      if(state.suratFilterBulan || state.suratFilterTahun){
+        const bt = extractBulanTahun(s.tanggalSurat, s.uploadedAt);
+        if(!bt) return false;
+        if(state.suratFilterBulan && bt.bulan !== parseInt(state.suratFilterBulan, 10)) return false;
+        if(state.suratFilterTahun && bt.tahun !== parseInt(state.suratFilterTahun, 10)) return false;
+      }
+      return true;
     })
     .sort((a, b) => new Date(b.uploadedAt || 0) - new Date(a.uploadedAt || 0));
 
@@ -1699,6 +1720,14 @@ function renderInformasiSurat(){
 
     <div class="toolbar">
       <div class="search"><input type="text" id="surat-search-input" placeholder="Cari nama surat, hal, atau nomor surat…" value="${escapeHtml(state.suratSearch)}"></div>
+      <select class="filter" id="surat-filter-bulan">
+        <option value="">Semua Bulan</option>
+        ${BULAN_NAMES.map((b, i) => `<option value="${i + 1}" ${state.suratFilterBulan == (i+1) ? 'selected' : ''}>${b}</option>`).join('')}
+      </select>
+      <select class="filter" id="surat-filter-tahun">
+        <option value="">Semua Tahun</option>
+        ${tahunOptions.map(t => `<option value="${t}" ${state.suratFilterTahun == t ? 'selected' : ''}>${t}</option>`).join('')}
+      </select>
       ${state.isAdmin ? `
         <input type="file" id="surat-file-input" accept="application/pdf,.pdf" style="display:none;">
         <button class="btn" id="btn-upload-surat" ${state.suratUploading ? 'disabled' : ''}>${state.suratUploading ? (state.suratUploadStatus || 'Memproses…') : '⬆ Upload Surat PDF'}</button>
@@ -1793,6 +1822,10 @@ function renderInformasiSurat(){
       restoreCursor('surat-search-input', pos);
     });
   }
+  const suratFilterBulan = document.getElementById('surat-filter-bulan');
+  if(suratFilterBulan) suratFilterBulan.addEventListener('change', e => { state.suratFilterBulan = e.target.value; render(); });
+  const suratFilterTahun = document.getElementById('surat-filter-tahun');
+  if(suratFilterTahun) suratFilterTahun.addEventListener('change', e => { state.suratFilterTahun = e.target.value; render(); });
 
   const btnUpload = document.getElementById('btn-upload-surat');
   const fileInput = document.getElementById('surat-file-input');
@@ -2294,6 +2327,27 @@ function renderGuideModal(){
   document.getElementById('modal-close').addEventListener('click', closeModal);
   document.getElementById('guide-close').addEventListener('click', closeModal);
   wrap.addEventListener('click', e => { if(e.target.id === 'overlay') closeModal(); });
+}
+
+function extractBulanTahun(tanggalSuratText, fallbackIsoDate){
+  // Coba baca dari teks tanggal surat (format "27 Juli 2026")
+  if(tanggalSuratText){
+    const bulanPattern = BULAN_NAMES.join('|');
+    const m = String(tanggalSuratText).match(new RegExp('(\\d{1,2})\\s+(' + bulanPattern + ')\\s+(\\d{4})', 'i'));
+    if(m){
+      const bulanIdx = BULAN_NAMES.findIndex(b => b.toLowerCase() === m[2].toLowerCase());
+      if(bulanIdx !== -1) return { bulan: bulanIdx + 1, tahun: parseInt(m[3], 10) };
+    }
+    // Coba format ISO yyyy-MM-dd kalau ada
+    const isoMatch = String(tanggalSuratText).match(/^(\d{4})-(\d{2})-(\d{2})/);
+    if(isoMatch) return { bulan: parseInt(isoMatch[2], 10), tahun: parseInt(isoMatch[1], 10) };
+  }
+  // Kalau tidak terbaca, pakai tanggal upload sebagai cadangan
+  if(fallbackIsoDate){
+    const d = new Date(fallbackIsoDate);
+    if(!isNaN(d.getTime())) return { bulan: d.getMonth() + 1, tahun: d.getFullYear() };
+  }
+  return null;
 }
 
 function formatTanggal(val){
