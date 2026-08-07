@@ -283,6 +283,8 @@
   .badge.cuti-menikah{ background:var(--amber-soft); color:#8A5F1E; }
   .badge.surat-tunda{ background:var(--amber-soft); color:#8A5F1E; }
   .badge.surat-revisi{ background:#EAF0F8; color:#2E5490; }
+  .badge.disetujui-kepala{ background:#EAF0F8; color:#2E5490; }
+  .badge.disetujui-koordinator{ background:var(--amber-soft); color:#8A5F1E; }
 
   /* Cuti table */
   .month-nav{
@@ -501,6 +503,7 @@ const PROFESI_CATEGORIES = ["Apoteker","TTK","Umum","Transporter","SKM","Adminke
 const KETERANGAN_CUTI_OPTIONS = ["Cuti Tahunan","Cuti Sakit","Cuti Melahirkan","Cuti Menikah"];
 const SURAT_STATUS_OPTIONS = ["Selesai","Tunda","Revisi","Batal"];
 const SHIFT_OPTIONS = ["Shift","Non Shift","Cuti Melahirkan"];
+const DISETUJUI_OPTIONS = ["Kepala Instalasi Farmasi","Koordinator Ruangan"];
 const BULAN_NAMES = ["Januari","Februari","Maret","April","Mei","Juni","Juli","Agustus","September","Oktober","November","Desember"];
 
 let state = {
@@ -1026,6 +1029,12 @@ function suratStatusBadgeClass(k){
   return '';
 }
 
+function disetujuiBadgeClass(k){
+  if(k === 'Kepala Instalasi Farmasi') return 'disetujui-kepala';
+  if(k === 'Koordinator Ruangan') return 'disetujui-koordinator';
+  return '';
+}
+
 function exportToExcel(){
   if(typeof XLSX === 'undefined'){
     alert('Modul Excel belum siap dimuat, coba lagi sesaat lagi.');
@@ -1456,8 +1465,8 @@ function renderCuti(){
   const rows = [...state.cutiStaf]
     .filter(entry => {
       const start = parseDateLocal(entry.tglMulai);
-      const end = parseDateLocal(entry.tglSelesai);
-      if(!start || !end) return false;
+      if(!start) return true; // data tidak lengkap sama sekali — tetap tampilkan daripada hilang tanpa jejak
+      const end = parseDateLocal(entry.tglSelesai) || start; // kalau tanggal selesai kosong/rusak, anggap sehari saja
       const monthStart = new Date(year, month - 1, 1);
       const monthEnd = new Date(year, month, 0);
       return start <= monthEnd && end >= monthStart;
@@ -1502,6 +1511,7 @@ function renderCuti(){
               <th class="no-col">No</th>
               <th class="nama-col">Nama Petugas</th>
               <th class="ruangan-col">Depo/Ruangan</th>
+              <th class="ruangan-col">Disetujui</th>
               <th class="ruangan-col">Keterangan</th>
               <th class="ruangan-col">Shift</th>
               ${dayInfo.map(info => `<th class="${info.isHoliday ? 'day-header-holiday' : info.isSunday ? 'day-header-sunday' : ''}">${info.day}</th>`).join('')}
@@ -1511,7 +1521,7 @@ function renderCuti(){
           </thead>
           <tbody>
             ${rows.length === 0 ? `
-              <tr><td colspan="${6 + totalDays + (state.isAdmin ? 1 : 0)}" style="padding:36px; color:var(--ink-soft); text-align:center;">
+              <tr><td colspan="${7 + totalDays + (state.isAdmin ? 1 : 0)}" style="padding:36px; color:var(--ink-soft); text-align:center;">
                 Belum ada data cuti untuk bulan ini.${state.isAdmin ? ' Klik "Tambah Cuti" untuk mulai mengisi.' : ''}
               </td></tr>
             ` : rows.map((r, idx) => {
@@ -1522,6 +1532,16 @@ function renderCuti(){
                   <td class="no-col">${idx + 1}</td>
                   <td class="nama-col">${escapeHtml(r.namaPetugas)}${r.status === 'Selesai' ? '<div class="sub" style="color:var(--ok);">✓ Selesai</div>' : '<div class="sub">Berjalan</div>'}</td>
                   <td class="ruangan-col">${escapeHtml(r.depoRuangan)}</td>
+                  <td class="ruangan-col">
+                    ${state.isAdmin ? `
+                      <select class="filter" data-cuti-disetujui="${r.id}" style="max-width:150px;">
+                        <option value="">Pilih…</option>
+                        ${DISETUJUI_OPTIONS.map(o => `<option value="${o}" ${r.disetujuiOleh===o?'selected':''}>${o}</option>`).join('')}
+                      </select>
+                    ` : (r.disetujuiOleh
+                      ? `<span class="badge ${disetujuiBadgeClass(r.disetujuiOleh)}">${escapeHtml(r.disetujuiOleh)}</span>`
+                      : '<span class="sub">—</span>')}
+                  </td>
                   <td class="ruangan-col"><span class="badge ${keteranganCutiBadgeClass(r.keterangan)}">${escapeHtml(r.keterangan)}</span></td>
                   <td class="ruangan-col">${escapeHtml(r.shift) || '<span class="sub">—</span>'}</td>
                   ${dayNumbers.map(d => {
@@ -1594,6 +1614,15 @@ function renderCuti(){
         entry.status = entry.status === 'Selesai' ? 'Berjalan' : 'Selesai';
         await saveCutiData();
         render();
+      }
+    });
+  });
+  document.querySelectorAll('[data-cuti-disetujui]').forEach(sel => {
+    sel.addEventListener('change', async () => {
+      const entry = state.cutiStaf.find(x => x.id === sel.getAttribute('data-cuti-disetujui'));
+      if(entry){
+        entry.disetujuiOleh = sel.value;
+        await saveCutiData();
       }
     });
   });
@@ -2096,7 +2125,7 @@ function renderSuratDeleteModal(){
 
 function renderCutiFormModal(){
   const editing = state.cutiEditingId ? state.cutiStaf.find(x => x.id === state.cutiEditingId) : null;
-  const r = editing || { namaPetugas:'', depoRuangan:'', keterangan:'', shift:'', tglMulai:'', tglSelesai:'' };
+  const r = editing || { namaPetugas:'', depoRuangan:'', disetujuiOleh:'', keterangan:'', shift:'', tglMulai:'', tglSelesai:'' };
 
   const wrap = document.createElement('div');
   wrap.className = 'overlay';
@@ -2114,6 +2143,13 @@ function renderCutiFormModal(){
         <div class="field">
           <label>Depo/Ruangan</label>
           <input type="text" id="cf-ruangan" value="${escapeHtml(r.depoRuangan)}">
+        </div>
+        <div class="field">
+          <label>Disetujui Oleh <span class="opt-tag">(Opsional)</span></label>
+          <select id="cf-disetujui">
+            <option value="">Pilih…</option>
+            ${DISETUJUI_OPTIONS.map(o => `<option value="${escapeHtml(o)}" ${r.disetujuiOleh===o?'selected':''}>${o}</option>`).join('')}
+          </select>
         </div>
         <div class="grid2">
           <div class="field">
