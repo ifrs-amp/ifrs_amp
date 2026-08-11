@@ -300,25 +300,26 @@
     text-align:center;
   }
   .cuti-table-wrap{ width:100%; }
-  table.cuti-table{ border-collapse:collapse; font-size:11px; table-layout:fixed; width:100%; }
+  table.cuti-table{ border-collapse:collapse; font-size:11px; table-layout:fixed; width:100%; min-width:1300px; }
   table.cuti-table th, table.cuti-table td{
-    border:1px solid var(--line); padding:4px 2px; text-align:center; overflow:hidden; text-overflow:ellipsis;
+    border:1px solid var(--line); padding:4px 1px; text-align:center; overflow:hidden; text-overflow:ellipsis;
   }
   table.cuti-table thead th{
     background:#F8FAF9; color:var(--ink-soft); font-weight:600; font-size:9.5px; text-transform:uppercase;
   }
-  table.cuti-table td.nama-col, table.cuti-table th.nama-col{ text-align:left; white-space:normal; width:9%; padding-left:6px; }
-  table.cuti-table td.ruangan-col, table.cuti-table th.ruangan-col{ text-align:left; white-space:normal; width:8%; padding-left:6px; }
-  table.cuti-table td.day-cell{ width:auto; color:var(--ink-soft); font-size:10px; }
+  table.cuti-table td.nama-col, table.cuti-table th.nama-col{ text-align:left; white-space:normal; width:7%; padding-left:6px; }
+  table.cuti-table td.ruangan-col, table.cuti-table th.ruangan-col{ text-align:left; white-space:normal; width:6%; padding-left:6px; }
+  table.cuti-table td.day-cell{ width:auto; color:var(--ink-soft); font-size:10.5px; overflow:visible; text-overflow:clip; padding:4px 0; }
+  table.cuti-table th.day-header{ overflow:visible; text-overflow:clip; padding:4px 0; font-size:10px; white-space:nowrap; }
   table.cuti-table td.day-cell.taken{ background:var(--danger); color:#fff; font-weight:700; border-color:var(--danger); }
   table.cuti-table td.day-cell.taken-excluded{ background:#E4E8E7; color:#8A9694; font-weight:600; }
   table.cuti-table td.day-cell-sunday{ background:#FBE1DE; }
   table.cuti-table td.day-cell-holiday{ background:#FADCEC; }
   table.cuti-table th.day-header-sunday{ background:var(--danger); color:#fff; }
   table.cuti-table th.day-header-holiday{ background:#D6488F; color:#fff; }
-  table.cuti-table td.total-col, table.cuti-table th.total-col{ font-weight:700; color:var(--teal); background:#F3F8F7; width:4%; }
-  table.cuti-table td.no-col, table.cuti-table th.no-col{ width:3%; color:var(--ink-soft); }
-  table.cuti-table td.aksi-col, table.cuti-table th.aksi-col{ white-space:nowrap; width:11%; overflow:visible; }
+  table.cuti-table td.total-col, table.cuti-table th.total-col{ font-weight:700; color:var(--teal); background:#F3F8F7; width:3%; }
+  table.cuti-table td.no-col, table.cuti-table th.no-col{ width:2%; color:var(--ink-soft); }
+  table.cuti-table td.aksi-col, table.cuti-table th.aksi-col{ white-space:nowrap; width:8%; overflow:visible; }
   table.cuti-table td.aksi-col .row-actions{ display:flex; flex-direction:column; gap:4px; }
   table.cuti-table td.aksi-col .btn.small{ padding:3px 6px; font-size:10px; width:100%; }
   .row-actions{ display:flex; gap:6px; }
@@ -1513,15 +1514,14 @@ function renderCuti(){
               <th class="ruangan-col">Depo/Ruangan</th>
               <th class="ruangan-col">Disetujui</th>
               <th class="ruangan-col">Keterangan</th>
-              <th class="ruangan-col">Shift</th>
-              ${dayInfo.map(info => `<th class="${info.isHoliday ? 'day-header-holiday' : info.isSunday ? 'day-header-sunday' : ''}">${info.day}</th>`).join('')}
+              ${dayInfo.map(info => `<th class="day-header ${info.isHoliday ? 'day-header-holiday' : info.isSunday ? 'day-header-sunday' : ''}">${info.day}</th>`).join('')}
               <th class="total-col">Total Hari</th>
               ${state.isAdmin ? '<th class="aksi-col"></th>' : ''}
             </tr>
           </thead>
           <tbody>
             ${rows.length === 0 ? `
-              <tr><td colspan="${7 + totalDays + (state.isAdmin ? 1 : 0)}" style="padding:36px; color:var(--ink-soft); text-align:center;">
+              <tr><td colspan="${6 + totalDays + (state.isAdmin ? 1 : 0)}" style="padding:36px; color:var(--ink-soft); text-align:center;">
                 Belum ada data cuti untuk bulan ini.${state.isAdmin ? ' Klik "Tambah Cuti" untuk mulai mengisi.' : ''}
               </td></tr>
             ` : rows.map((r, idx) => {
@@ -1542,8 +1542,10 @@ function renderCuti(){
                       ? `<span class="badge ${disetujuiBadgeClass(r.disetujuiOleh)}">${escapeHtml(r.disetujuiOleh)}</span>`
                       : '<span class="sub">—</span>')}
                   </td>
-                  <td class="ruangan-col"><span class="badge ${keteranganCutiBadgeClass(r.keterangan)}">${escapeHtml(r.keterangan)}</span></td>
-                  <td class="ruangan-col">${escapeHtml(r.shift) || '<span class="sub">—</span>'}</td>
+                  <td class="ruangan-col">
+                    <span class="badge ${keteranganCutiBadgeClass(r.keterangan)}">${escapeHtml(r.keterangan)}</span>
+                    <div class="sub" style="margin-top:3px;">${escapeHtml(r.shift) || '—'}</div>
+                  </td>
                   ${dayNumbers.map(d => {
                     const found = takenDays.find(x => x.day === d);
                     const info = dayInfo.find(x => x.day === d);
