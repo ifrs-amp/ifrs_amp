@@ -1804,13 +1804,14 @@ function renderInformasiSurat(){
             <th>File</th>
             <th>File Asli</th>
             <th>Keterangan</th>
+            <th>Posisi Surat Saat Ini</th>
             ${state.isAdmin ? '<th></th>' : ''}
           </tr>
         </thead>
         <tbody>
           ${rows.length === 0 ? `
             <tr class="empty-row">
-              <td colspan="${state.isAdmin ? 7 : 6}">
+              <td colspan="${state.isAdmin ? 8 : 7}">
                 <div class="big">${state.suratList.length === 0 ? 'Belum ada surat yang diupload' : 'Tidak ada hasil'}</div>
                 <div>${state.suratList.length === 0
                   ? (state.isAdmin ? 'Klik "Upload Surat PDF" untuk mulai menambahkan.' : 'Surat akan muncul di sini setelah admin menambahkannya.')
@@ -1848,6 +1849,11 @@ function renderInformasiSurat(){
                 ` : (s.keteranganStatus
                   ? `<span class="badge ${suratStatusBadgeClass(s.keteranganStatus)}">${escapeHtml(s.keteranganStatus)}</span>`
                   : '<span class="sub">—</span>')}
+              </td>
+              <td>
+                ${state.isAdmin ? `
+                  <input type="text" data-posisi-surat="${s.id}" value="${escapeHtml(s.posisiSurat)}" placeholder="Contoh: Di meja Kepala Instalasi" style="width:100%; min-width:160px; padding:6px 8px; border-radius:6px; border:1px solid var(--line); font-size:12.5px;">
+                ` : (escapeHtml(s.posisiSurat) || '<span class="sub">—</span>')}
               </td>
               ${state.isAdmin ? `
                 <td>
@@ -1961,6 +1967,14 @@ function renderInformasiSurat(){
       const s = state.suratList.find(x => x.id === sel.getAttribute('data-surat-status'));
       if(!s) return;
       s.keteranganStatus = sel.value;
+      await saveSuratList();
+    });
+  });
+  document.querySelectorAll('[data-posisi-surat]').forEach(input => {
+    input.addEventListener('change', async () => {
+      const s = state.suratList.find(x => x.id === input.getAttribute('data-posisi-surat'));
+      if(!s) return;
+      s.posisiSurat = input.value.trim();
       await saveSuratList();
     });
   });
