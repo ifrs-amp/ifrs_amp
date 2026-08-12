@@ -31,6 +31,46 @@
     color:var(--ink);
     font-family:'Inter',sans-serif;
     -webkit-font-smoothing:antialiased;
+    transition:background .4s ease;
+  }
+  body.landing-bg{
+    background:linear-gradient(135deg, #EAF3FC 0%, #DCEAFA 50%, #E7F1FC 100%);
+    background-size:200% 200%;
+    animation:bgShift 16s ease-in-out infinite;
+    overflow-x:hidden;
+    position:relative;
+  }
+  @keyframes bgShift{
+    0%{ background-position:0% 50%; }
+    50%{ background-position:100% 50%; }
+    100%{ background-position:0% 50%; }
+  }
+  .bg-blob{
+    position:fixed; border-radius:50%; filter:blur(70px); opacity:.55; z-index:0; pointer-events:none;
+  }
+  .bg-blob-1{
+    width:420px; height:420px; background:#BFE0FA; top:-140px; left:-120px;
+    animation:floatBlob1 20s ease-in-out infinite;
+  }
+  .bg-blob-2{
+    width:360px; height:360px; background:#CFE4FB; bottom:-120px; right:-100px;
+    animation:floatBlob2 24s ease-in-out infinite;
+  }
+  .bg-blob-3{
+    width:280px; height:280px; background:#D9EBFC; top:40%; left:50%;
+    animation:floatBlob3 28s ease-in-out infinite;
+  }
+  @keyframes floatBlob1{
+    0%,100%{ transform:translate(0,0) scale(1); }
+    50%{ transform:translate(70px,50px) scale(1.08); }
+  }
+  @keyframes floatBlob2{
+    0%,100%{ transform:translate(0,0) scale(1); }
+    50%{ transform:translate(-60px,-40px) scale(1.05); }
+  }
+  @keyframes floatBlob3{
+    0%,100%{ transform:translate(-50%,-50%) scale(1); }
+    50%{ transform:translate(-50%,-50%) translate(40px,-60px) scale(1.1); }
   }
   ::selection{ background:var(--amber-soft); }
   .wrap{ max-width:1180px; margin:0 auto; padding:28px 20px 80px; }
@@ -42,7 +82,7 @@
   .home-link:hover{ color:var(--teal-2); }
 
   /* Landing page */
-  .landing-wrap{ max-width:1180px; margin:0 auto; padding:0 20px 60px; }
+  .landing-wrap{ max-width:1180px; margin:0 auto; padding:0 20px 60px; position:relative; z-index:1; }
   .hero{
     position:relative; overflow:hidden; border-radius:20px; margin:20px 0 32px;
     background:radial-gradient(circle at 20% 20%, #1C5D5A 0%, var(--teal) 55%, #0B302F 100%);
@@ -1290,12 +1330,16 @@ function render(){
   if(state.screen === 'landing'){
     renderLanding();
   } else if(state.screen === 'cuti'){
+    document.body.classList.remove('landing-bg');
     renderCuti();
   } else if(state.screen === 'rekap-cuti'){
+    document.body.classList.remove('landing-bg');
     renderRekapCuti();
   } else if(state.screen === 'informasi-surat'){
+    document.body.classList.remove('landing-bg');
     renderInformasiSurat();
   } else {
+    document.body.classList.remove('landing-bg');
     renderDashboard();
   }
   if(state.modal === 'login') renderLoginModal();
@@ -2328,7 +2372,11 @@ function renderLiburModal(){
 
 function renderLanding(){
   const app = document.getElementById('app');
+  document.body.classList.add('landing-bg');
   app.innerHTML = `
+    <div class="bg-blob bg-blob-1"></div>
+    <div class="bg-blob bg-blob-2"></div>
+    <div class="bg-blob bg-blob-3"></div>
     <div class="landing-wrap">
       <div class="hero">
         <div class="hero-inner">
