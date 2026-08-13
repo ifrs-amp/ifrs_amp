@@ -576,6 +576,8 @@ let state = {
   suratUploading: false,
   suratUploadStatus: '',
   suratSearch: '',
+  restrictedShare: false,
+  restrictedScreen: null,
   suratFilterBulan: '',
   suratFilterTahun: '',
   suratDeletingId: null
@@ -1341,7 +1343,7 @@ function syncUrlHash(){
 
 async function copyPageLink(btn){
   const wanted = HASH_FOR_SCREEN[state.screen] || '';
-  const url = location.origin + location.pathname + location.search + (wanted ? '#' + wanted : '');
+  const url = location.origin + location.pathname + '?shared=1' + (wanted ? '#' + wanted : '');
   const originalText = btn.textContent;
   try{
     await navigator.clipboard.writeText(url);
@@ -1419,7 +1421,7 @@ function renderDashboard(){
   app.innerHTML = `
     <div class="topbar">
       <div>
-        <button class="home-link" id="btn-home">← Beranda</button>
+        ${state.restrictedShare ? "" : `<button class="home-link" id="btn-home">← Beranda</button>`}
         <p class="brand-eyebrow">Rekam Kepegawaian</p>
         <h1 class="brand-title">Database Staf</h1>
         <p class="brand-sub">Data staf, kualifikasi, dan status kepegawaian dalam satu tempat.</p>
@@ -1428,7 +1430,7 @@ function renderDashboard(){
         <span class="pill ${state.isAdmin ? 'on' : ''}"><span class="dot"></span>${state.isAdmin ? 'Mode Super Admin' : 'Mode Lihat'}</span>
         ${state.isAdmin
           ? `<button class="btn secondary small" id="btn-logout">Keluar</button>`
-          : `<button class="btn secondary small" id="btn-login">Masuk sebagai Admin</button>`}
+          : (state.restrictedShare ? "" : `<button class="btn secondary small" id="btn-login">Masuk sebagai Admin</button>`)}
       </div>
     </div>
 
@@ -1555,7 +1557,7 @@ function renderCuti(){
   app.innerHTML = `
     <div class="topbar">
       <div>
-        <button class="home-link" id="btn-home">← Beranda</button>
+        ${state.restrictedShare ? "" : `<button class="home-link" id="btn-home">← Beranda</button>`}
         <p class="brand-eyebrow">Rekam Kepegawaian</p>
         <h1 class="brand-title">Cuti Staf Instalasi Farmasi</h1>
         <p class="brand-sub">Rekap cuti tahunan, cuti sakit, dan cuti melahirkan staf per bulan.</p>
@@ -1564,7 +1566,7 @@ function renderCuti(){
         <span class="pill ${state.isAdmin ? 'on' : ''}"><span class="dot"></span>${state.isAdmin ? 'Mode Super Admin' : 'Mode Lihat'}</span>
         ${state.isAdmin
           ? `<button class="btn secondary small" id="btn-logout">Keluar</button>`
-          : `<button class="btn secondary small" id="btn-login">Masuk sebagai Admin</button>`}
+          : (state.restrictedShare ? "" : `<button class="btn secondary small" id="btn-login">Masuk sebagai Admin</button>`)}
       </div>
     </div>
 
@@ -1742,7 +1744,7 @@ function renderRekapCuti(){
   app.innerHTML = `
     <div class="topbar">
       <div>
-        <button class="home-link" id="btn-home">← Beranda</button>
+        ${state.restrictedShare ? "" : `<button class="home-link" id="btn-home">← Beranda</button>`}
         <p class="brand-eyebrow">Rekam Kepegawaian</p>
         <h1 class="brand-title">Daftar Staf Instalasi Farmasi Ambil Cuti</h1>
         <p class="brand-sub">Rekap total hari cuti tiap staf, dihitung sesuai aturan Shift/Non Shift.</p>
@@ -1841,7 +1843,7 @@ function renderInformasiSurat(){
   app.innerHTML = `
     <div class="topbar">
       <div>
-        <button class="home-link" id="btn-home">← Beranda</button>
+        ${state.restrictedShare ? "" : `<button class="home-link" id="btn-home">← Beranda</button>`}
         <p class="brand-eyebrow">Korespondensi</p>
         <h1 class="brand-title">Informasi Surat</h1>
         <p class="brand-sub">Surat-surat ke manajemen — upload PDF, sistem otomatis membaca Nomor, Tanggal, dan Hal surat.</p>
@@ -1850,7 +1852,7 @@ function renderInformasiSurat(){
         <span class="pill ${state.isAdmin ? 'on' : ''}"><span class="dot"></span>${state.isAdmin ? 'Mode Super Admin' : 'Mode Lihat'}</span>
         ${state.isAdmin
           ? `<button class="btn secondary small" id="btn-logout">Keluar</button>`
-          : `<button class="btn secondary small" id="btn-login">Masuk sebagai Admin</button>`}
+          : (state.restrictedShare ? "" : `<button class="btn secondary small" id="btn-login">Masuk sebagai Admin</button>`)}
       </div>
     </div>
 
@@ -2937,7 +2939,19 @@ function closeModal(){
   if(hash && SCREEN_FOR_HASH[hash]){
     state.screen = SCREEN_FOR_HASH[hash];
   }
+  if(new URLSearchParams(location.search).has('shared')){
+    state.restrictedShare = true;
+    state.restrictedScreen = state.screen;
+  }
 })();
+window.addEventListener('hashchange', () => {
+  if(state.restrictedShare){
+    // kunci di halaman yang dibagikan, abaikan percobaan pindah lewat URL
+    if(location.hash.replace('#','') !== (HASH_FOR_SCREEN[state.restrictedScreen] || '')){
+      syncUrlHash();
+    }
+  }
+});
 loadData();
 </script>
 </body>
