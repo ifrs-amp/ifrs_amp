@@ -2447,7 +2447,9 @@ function renderLanding(){
         <div class="orbit-right-popup ${state.farmasiMenuOpen ? 'open' : ''}">
           <button class="orbit-circle-btn" id="btn-cuti-staf">Cuti Staf<br>Instalasi Farmasi</button>
         </div>
-        <div class="orbit-slot-empty orbit-slot-bottom"></div>
+        <div class="orbit-bottom-popup ${state.farmasiMenuOpen ? 'open' : ''}">
+          <button class="orbit-circle-btn" id="btn-surat-diminta">Surat yang<br>Diminta</button>
+        </div>
       </div>
     </div>
   `;
@@ -2470,6 +2472,9 @@ function renderLanding(){
     state.farmasiMenuOpen = false;
     state.screen = 'informasi-surat';
     render();
+  });
+  document.getElementById('btn-surat-diminta').addEventListener('click', () => {
+    alert('Menu Surat yang Diminta sedang dalam pengembangan.');
   });
 }
 
