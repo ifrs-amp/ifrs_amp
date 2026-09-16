@@ -1245,6 +1245,7 @@ async function saveData(){
 
 function docStatus(expiryDate){
   if(!expiryDate) return null;
+  if(expiryDate === 'SEUMUR_HIDUP') return 'aktif';
   const d = daysUntil(expiryDate);
   if(d === null) return null;
   return d < 0 ? 'tidak-aktif' : 'aktif';
@@ -1252,6 +1253,7 @@ function docStatus(expiryDate){
 
 function renderDocCell(nomor, expiryDate){
   if(!nomor && !expiryDate) return '<span class="sub">—</span>';
+  const isSeumurHidup = expiryDate === 'SEUMUR_HIDUP';
   const status = docStatus(expiryDate);
   const badge = status === 'aktif'
     ? '<span class="badge aktif">Aktif</span>'
@@ -1260,7 +1262,7 @@ function renderDocCell(nomor, expiryDate){
       : '';
   return `
     ${nomor ? `<div>${escapeHtml(nomor)}</div>` : '<div class="sub">Nomor belum diisi</div>'}
-    ${expiryDate ? `<div class="sub">s.d. ${formatTanggal(expiryDate)}</div>` : ''}
+    ${isSeumurHidup ? '<div class="sub">Seumur Hidup</div>' : (expiryDate ? `<div class="sub">s.d. ${formatTanggal(expiryDate)}</div>` : '')}
     ${badge ? `<div style="margin-top:3px;">${badge}</div>` : ''}
   `;
 }
@@ -2737,7 +2739,11 @@ function renderFormModal(){
           </div>
           <div class="field">
             <label>Tanggal kadaluarsa STR <span class="opt-tag">(Opsional)</span></label>
-            <input type="date" id="f-tgl-str" value="${escapeHtml(dateOnly(s.tglKadaluarsaSTR))}">
+            <input type="date" id="f-tgl-str" value="${escapeHtml(dateOnly(s.tglKadaluarsaSTR))}" ${s.tglKadaluarsaSTR === 'SEUMUR_HIDUP' ? 'disabled' : ''}>
+            <label style="display:flex; align-items:center; gap:6px; margin-top:6px; font-weight:400; font-size:12.5px; color:var(--ink-soft); cursor:pointer;">
+              <input type="checkbox" id="f-str-seumur-hidup" ${s.tglKadaluarsaSTR === 'SEUMUR_HIDUP' ? 'checked' : ''} style="width:auto; margin:0;">
+              STR Seumur Hidup (tidak ada tanggal kadaluarsa)
+            </label>
           </div>
         </div>
         <div class="field">
@@ -2784,6 +2790,19 @@ function renderFormModal(){
   document.getElementById('form-cancel').addEventListener('click', closeModal);
   wrap.addEventListener('click', e => { if(e.target.id === 'overlay') closeModal(); });
   document.getElementById('f-nama').focus();
+
+  const chkSeumurHidupStr = document.getElementById('f-str-seumur-hidup');
+  const tglStrInput = document.getElementById('f-tgl-str');
+  if(chkSeumurHidupStr && tglStrInput){
+    chkSeumurHidupStr.addEventListener('change', () => {
+      if(chkSeumurHidupStr.checked){
+        tglStrInput.value = '';
+        tglStrInput.disabled = true;
+      } else {
+        tglStrInput.disabled = false;
+      }
+    });
+  }
 
   function wireDocUpload(rowId, fileInputId, linkInputId, fileIdInputId, statusId, toggleId, docType, label){
     const fileInput = document.getElementById(fileInputId);
@@ -2870,7 +2889,7 @@ function renderFormModal(){
       jabatanRuangan: document.getElementById('f-jabatan-ruangan').value.trim(),
       keterangan: document.getElementById('f-keterangan').value.trim(),
       nomorSTR: document.getElementById('f-nomor-str').value.trim(),
-      tglKadaluarsaSTR: document.getElementById('f-tgl-str').value,
+      tglKadaluarsaSTR: document.getElementById('f-str-seumur-hidup').checked ? 'SEUMUR_HIDUP' : document.getElementById('f-tgl-str').value,
       linkDokumenSTR: document.getElementById('f-link-str').value.trim(),
       fileIdSTR: document.getElementById('f-fileid-str').value.trim(),
       nomorSIPA: document.getElementById('f-nomor-sipa').value.trim(),
