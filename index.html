@@ -31,9 +31,7 @@
   .home-link{background:none;border:none;color:var(--ink-soft);font-size:12px;font-weight:600;padding:0 0 8px;cursor:pointer;letter-spacing:.02em;}
   .home-link:hover{color:var(--teal-2);}
 
-  /* Landing — tanpa hero banner & tanpa logo atas */
   .landing-wrap{max-width:1180px;margin:0 auto;padding:40px 20px 60px;position:relative;z-index:1;min-height:100vh;display:flex;flex-direction:column;justify-content:center;}
-
   .orbit-label{text-align:center;font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:var(--ink-soft);margin:0 0 40px;font-weight:600;}
   .orbit-grid{display:grid;grid-template-columns:1fr 1fr 1fr;grid-template-rows:auto auto auto;align-items:center;justify-items:center;gap:36px;max-width:760px;margin:0 auto;}
   .orbit-circle-btn{width:190px;height:190px;border-radius:50%;border:none;cursor:pointer;background:linear-gradient(160deg,var(--teal) 0%,var(--teal-2) 100%);color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;font-family:'Inter',sans-serif;font-weight:700;font-size:17px;text-align:center;padding:16px;box-shadow:0 16px 40px rgba(18,63,62,.30);transition:transform .18s ease,box-shadow .18s ease;}
@@ -100,7 +98,6 @@
   .stat .num{font-family:'Fraunces',serif;font-size:28px;font-weight:600;color:var(--teal);line-height:1;}
   .stat .label{font-size:12px;color:var(--ink-soft);margin-top:6px;}
 
-  /* Toolbar — STICKY */
   .toolbar{
     display:flex;flex-wrap:wrap;gap:10px;align-items:center;
     position:sticky;top:0;z-index:60;
@@ -145,7 +142,6 @@
   .badge.disetujui-kepala{background:#EAF0F8;color:#2E5490;}
   .badge.disetujui-koordinator{background:var(--amber-soft);color:#8A5F1E;}
 
-  /* Surat card layout */
   .surat-list{display:flex;flex-direction:column;gap:14px;}
   .surat-card{background:var(--paper);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden;}
   .surat-card-header{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;padding:14px 18px;background:linear-gradient(180deg,#F8FAF9 0%,#F3F7F6 100%);border-bottom:1px solid var(--line);}
@@ -199,7 +195,8 @@
   .empty-row td{padding:44px 14px;text-align:center;color:var(--ink-soft);}
   .empty-row .big{font-family:'Fraunces',serif;font-size:17px;color:var(--teal);margin-bottom:4px;}
 
-  .overlay{position:fixed;inset:0;background:rgba(18,45,44,.45);display:flex;align-items:center;justify-content:center;z-index:50;padding:20px;}
+  /* === PERBAIKAN: z-index overlay dinaikkan agar di atas toolbar sticky === */
+  .overlay{position:fixed;inset:0;background:rgba(18,45,44,.45);display:flex;align-items:center;justify-content:center;z-index:100;padding:20px;}
   .modal{background:var(--paper);width:100%;max-width:560px;border-radius:14px;padding:26px 28px 24px;box-shadow:0 20px 60px rgba(0,0,0,.25);max-height:90vh;overflow-y:auto;position:relative;}
   .modal h2{font-family:'Fraunces',serif;font-size:22px;margin:0 0 4px;color:var(--teal);}
   .modal p.hint{margin:0 0 18px;color:var(--ink-soft);font-size:13px;}
