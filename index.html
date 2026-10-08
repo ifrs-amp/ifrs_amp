@@ -100,7 +100,19 @@
   .stat .num{font-family:'Fraunces',serif;font-size:28px;font-weight:600;color:var(--teal);line-height:1;}
   .stat .label{font-size:12px;color:var(--ink-soft);margin-top:6px;}
 
-  .toolbar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;position:sticky;top:0;z-index:60;background:rgba(241,244,243,0.96);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);padding:14px 20px;margin:0 -20px 18px;border-bottom:1px solid var(--line);box-shadow:0 6px 14px -8px rgba(18,63,62,0.18);transition:box-shadow .2s ease;}
+  /* Toolbar - STICKY */
+  .toolbar{
+    display:flex;flex-wrap:wrap;gap:10px;align-items:center;
+    position:sticky;top:0;z-index:60;
+    background:rgba(241,244,243,0.96);
+    -webkit-backdrop-filter:blur(10px);
+    backdrop-filter:blur(10px);
+    padding:14px 20px;
+    margin:0 -20px 18px;
+    border-bottom:1px solid var(--line);
+    box-shadow:0 6px 14px -8px rgba(18,63,62,0.18);
+    transition:box-shadow .2s ease;
+  }
   .search{flex:1;min-width:200px;position:relative;}
   .search input{width:100%;padding:10px 12px 10px 34px;border-radius:8px;border:1px solid var(--line);background:var(--paper);font-size:13.5px;color:var(--ink);}
   .search input:focus{outline:none;border-color:var(--teal-2);}
@@ -133,7 +145,7 @@
   .badge.disetujui-kepala{background:#EAF0F8;color:#2E5490;}
   .badge.disetujui-koordinator{background:var(--amber-soft);color:#8A5F1E;}
 
-  /* === SURAT CARD LAYOUT (file dll di bawah judul) === */
+  /* Surat card layout */
   .surat-list{display:flex;flex-direction:column;gap:14px;}
   .surat-card{background:var(--paper);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden;}
   .surat-card-header{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;padding:14px 18px;background:linear-gradient(180deg,#F8FAF9 0%,#F3F7F6 100%);border-bottom:1px solid var(--line);}
@@ -219,6 +231,7 @@
     .surat-card-header{flex-direction:column;}
     .surat-card-body{grid-template-columns:1fr;}
     .pagination{flex-wrap:wrap;gap:8px;}
+    .toolbar{margin:0 -16px 16px;padding:12px 16px;}
   }
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -231,21 +244,16 @@
 <script>
 const ADMIN_PASSWORD = "admin123";
 
-// LOGO: ganti URL di bawah dengan link logo Anda (mis. logo dari Google Drive yang sudah di-share publik,
-// atau upload ke imgbb.com lalu salin direct link-nya). SVG kecil di bawah ini adalah placeholder aman.
 const LOGO_SRC = "data:image/svg+xml;utf8," + encodeURIComponent(
-  `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 340 100">
-    <rect width="340" height="100" rx="10" fill="#123F3E"/>
-    <rect x="20" y="30" width="14" height="40" rx="4" fill="#fff"/>
-    <rect x="34" y="42" width="42" height="16" rx="4" fill="#fff"/>
-    <text x="90" y="52" font-family="Georgia,serif" font-size="22" fill="#fff">Instalasi Farmasi</text>
-    <text x="90" y="72" font-family="Arial,sans-serif" font-size="12" fill="#B8863B">RSUD Aji Muhammad Parikesit</text>
-  </svg>`
+  '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 340 100">' +
+    '<rect width="340" height="100" rx="10" fill="#123F3E"/>' +
+    '<rect x="20" y="30" width="14" height="40" rx="4" fill="#fff"/>' +
+    '<rect x="34" y="42" width="42" height="16" rx="4" fill="#fff"/>' +
+    '<text x="90" y="52" font-family="Georgia,serif" font-size="22" fill="#fff">Instalasi Farmasi</text>' +
+    '<text x="90" y="72" font-family="Arial,sans-serif" font-size="12" fill="#B8863B">RSUD Aji Muhammad Parikesit</text>' +
+  '</svg>'
 );
 
-// ============================================================
-// KONFIGURASI GOOGLE SHEETS SEBAGAI DATABASE
-// ============================================================
 const SHEETS_API_URL = "https://script.google.com/macros/s/AKfycbyzlDLBQK5TjQzusMgkM_lmmX8AaA5JIdSwwuylCLVnSFs886TdFvjslC556ZALevw/exec";
 
 async function sheetsGetList(table){
@@ -264,15 +272,11 @@ async function sheetsSetList(table, rows){
 const dataStore = {
   async getList(table, legacyKey){
     if(SHEETS_API_URL){
-      try{
-        const res = await sheetsGetList(table);
-        return (res && res.rows) ? res.rows : [];
-      }catch(e){ console.error('Gagal mengambil dari Google Sheets', e); return []; }
+      try{ const res = await sheetsGetList(table); return (res && res.rows) ? res.rows : []; }
+      catch(e){ console.error('Gagal mengambil dari Google Sheets', e); return []; }
     }
-    try{
-      const res = await window.storage.get(legacyKey, true);
-      return res && res.value ? JSON.parse(res.value) : [];
-    }catch(e){ return []; }
+    try{ const res = await window.storage.get(legacyKey, true); return res && res.value ? JSON.parse(res.value) : []; }
+    catch(e){ return []; }
   },
   async setList(table, legacyKey, rows){
     if(SHEETS_API_URL){
@@ -293,9 +297,7 @@ async function uploadFileToDrive(base64, fileName, docType, mimeType){
       body: JSON.stringify({ action: 'uploadFile', base64, fileName, docType, mimeType })
     });
     const data = await res.json();
-    if(data && data.url){
-      return { url: data.url, fileId: data.fileId || driveFileIdFromUrl(data.url), error:null };
-    }
+    if(data && data.url) return { url: data.url, fileId: data.fileId || driveFileIdFromUrl(data.url), error:null };
     return { url:null, fileId:null, error: (data && data.error) ? data.error : 'Respons server tidak sesuai' };
   }catch(e){
     console.error('Gagal upload ke Google Drive', e);
@@ -308,12 +310,10 @@ function driveFileIdFromUrl(url){
   const m = url.match(/\/file\/d\/([^/]+)/) || url.match(/[?&]id=([^&]+)/);
   return m ? m[1] : null;
 }
-
 function drivePreviewUrl(fileIdOrUrl){
   const fileId = fileIdOrUrl && fileIdOrUrl.startsWith('http') ? driveFileIdFromUrl(fileIdOrUrl) : fileIdOrUrl;
   return fileId ? `https://drive.google.com/file/d/${fileId}/preview` : null;
 }
-
 function openFilePreviewModal(fileIdOrUrl, fallbackUrl){
   const embedUrl = drivePreviewUrl(fileIdOrUrl);
   const wrap = document.createElement('div');
@@ -336,54 +336,34 @@ function openFilePreviewModal(fileIdOrUrl, fallbackUrl){
 
 const PENDIDIKAN_OPTIONS = ["SMA","SMK","D3 Farmasi","S1 Farmasi","S2 Farmasi + Apoteker","S1 Farmasi + Apoteker"];
 const STATUS_OPTIONS = ["PNS","PPPK","PPPK Paruh Waktu","BLUD","PT"];
-const PROFESI_CATEGORIES = ["Apoteker","TTK","Umum","Transporter","SKM","Adminkes","S2 Farmasi"];
+const PROFESI_CATEGORIES = ["Apoteker","TTK","Umum","Transporter","SKM","Adminkes"];
 const KETERANGAN_CUTI_OPTIONS = ["Cuti Tahunan","Cuti Sakit","Cuti Melahirkan","Cuti Menikah"];
 const SURAT_STATUS_OPTIONS = ["Selesai","Tunda","Revisi","Batal"];
 const SHIFT_OPTIONS = ["Shift","Non Shift","Cuti Melahirkan"];
 const DISETUJUI_OPTIONS = ["Kepala Instalasi Farmasi","Koordinator Ruangan"];
 const BULAN_NAMES = ["Januari","Februari","Maret","April","Mei","Juni","Juli","Agustus","September","Oktober","November","Desember"];
-
 const SURAT_PER_PAGE = 10;
 
 let state = {
-  loading: true,
-  screen: 'landing',
-  staff: [],
-  isAdmin: false,
-  search: "",
-  filterStatus: "",
-  filterPendidikan: "",
-  filterProfesi: "",
-  farmasiMenuOpen: false,
-  modal: null,
-  editingId: null,
-  deletingId: null,
-  loginError: "",
-  cutiStaf: [],
-  cutiMonth: new Date().getMonth() + 1,
-  cutiYear: new Date().getFullYear(),
-  cutiEditingId: null,
-  cutiDeletingId: null,
-  liburNasional: [],
-  liburInput: '',
+  loading: true, screen: 'landing',
+  staff: [], isAdmin: false,
+  search: "", filterStatus: "", filterPendidikan: "", filterProfesi: "",
+  farmasiMenuOpen: false, modal: null,
+  editingId: null, deletingId: null, loginError: "",
+  cutiStaf: [], cutiMonth: new Date().getMonth() + 1, cutiYear: new Date().getFullYear(),
+  cutiEditingId: null, cutiDeletingId: null,
+  liburNasional: [], liburInput: '',
   rekapYear: new Date().getFullYear(),
-  suratList: [],
-  suratEditingId: null,
-  suratUploading: false,
-  suratUploadStatus: '',
-  suratSearch: '',
-  suratPage: 1,
-  restrictedShare: false,
-  restrictedScreen: null,
-  suratFilterBulan: '',
-  suratFilterTahun: '',
-  suratDeletingId: null
+  suratList: [], suratEditingId: null,
+  suratUploading: false, suratUploadStatus: '',
+  suratSearch: '', suratPage: 1,
+  restrictedShare: false, restrictedScreen: null,
+  suratFilterBulan: '', suratFilterTahun: '', suratDeletingId: null
 };
 
 function uid(){ return 's_' + Math.random().toString(36).slice(2,10) + Date.now().toString(36); }
 
 const REMINDER_THRESHOLD_DAYS = 90;
-
 function daysUntil(dateStr){
   if(!dateStr) return null;
   const today = new Date(); today.setHours(0,0,0,0);
@@ -391,7 +371,6 @@ function daysUntil(dateStr){
   if(isNaN(target.getTime())) return null;
   return Math.round((target - today) / 86400000);
 }
-
 function getExpiryReminders(){
   const items = [];
   state.staff.forEach(s => {
@@ -431,15 +410,15 @@ async function saveLiburNasional(){
   try{
     const rows = SHEETS_API_URL ? state.liburNasional.map(t => ({ tanggal: t })) : state.liburNasional;
     await dataStore.setList('LiburNasional', 'libur-nasional-list', rows);
-  }catch(e){ console.error('Gagal menyimpan data libur nasional', e); alert('Gagal menyimpan data libur nasional. Coba lagi.'); }
+  }catch(e){ console.error('Gagal menyimpan data libur nasional', e); alert('Gagal menyimpan data libur nasional.'); }
 }
 async function saveSuratList(){
   try{ await dataStore.setList('Surat', 'surat-list', state.suratList); }
-  catch(e){ console.error('Gagal menyimpan data surat', e); alert('Gagal menyimpan data surat. Coba lagi.'); }
+  catch(e){ console.error('Gagal menyimpan data surat', e); alert('Gagal menyimpan data surat.'); }
 }
 async function saveData(){
   try{ await dataStore.setList('Staff', 'staff-list', state.staff); }
-  catch(e){ console.error('Gagal menyimpan data', e); alert('Gagal menyimpan data. Coba lagi.'); }
+  catch(e){ console.error('Gagal menyimpan data', e); alert('Gagal menyimpan data.'); }
 }
 
 function daysInMonth(year, month){ return new Date(year, month, 0).getDate(); }
@@ -624,13 +603,8 @@ function waitForLib(checkFn, timeoutMs){
 
 async function handleSuratFileSelected(file){
   if(!file) return;
-  if(file.type !== 'application/pdf' && !file.name.toLowerCase().endsWith('.pdf')){
-    alert('File harus berformat PDF.'); return;
-  }
-  if(file.size > SURAT_MAX_SIZE_BYTES){
-    alert(`Ukuran file (${(file.size / (1024*1024)).toFixed(1)} MB) melebihi batas maksimal 10 MB.`);
-    return;
-  }
+  if(file.type !== 'application/pdf' && !file.name.toLowerCase().endsWith('.pdf')){ alert('File harus berformat PDF.'); return; }
+  if(file.size > SURAT_MAX_SIZE_BYTES){ alert(`Ukuran file (${(file.size / (1024*1024)).toFixed(1)} MB) melebihi batas 10 MB.`); return; }
   state.suratUploading = true;
   state.suratUploadStatus = 'Menyiapkan pembaca PDF…';
   render();
@@ -647,9 +621,7 @@ async function handleSuratFileSelected(file){
       const ab = await file.arrayBuffer();
       fields = extractSuratFields(await extractPdfFirstPageText(ab));
     }catch(err){ console.error('Gagal membaca isi PDF', err); }
-  } else {
-    skippedExtraction = true;
-  }
+  } else { skippedExtraction = true; }
 
   const foundNothing = !fields.tanggalSurat && !fields.hal && !fields.nomorSurat;
   if(pdfReady && foundNothing && typeof Tesseract !== 'undefined'){
@@ -704,16 +676,10 @@ async function viewSuratFile(id){
     const entry = state.suratList.find(x => x.id === id);
     let base64 = null;
     if(entry && entry.fileChunks) base64 = await loadFileChunked(id, entry.fileChunks);
-    else {
-      const res = await window.storage.get(`surat-file:${id}`, true);
-      base64 = res && res.value ? res.value : null;
-    }
+    else { const res = await window.storage.get(`surat-file:${id}`, true); base64 = res && res.value ? res.value : null; }
     if(!base64){ alert('File PDF tidak tersimpan. Hapus lalu upload ulang.'); return; }
     window.open(base64ToBlobUrl(base64), '_blank');
-  }catch(e){
-    console.error(e);
-    alert('File PDF gagal dibuka. Hapus data lalu upload ulang.');
-  }
+  }catch(e){ console.error(e); alert('File PDF gagal dibuka. Hapus data lalu upload ulang.'); }
 }
 
 function keteranganCutiBadgeClass(k){
@@ -770,9 +736,7 @@ function renderDocCell(nomor, expiryDate){
   if(!nomor && !expiryDate) return '<span class="sub">—</span>';
   const isSeumurHidup = expiryDate === 'SEUMUR_HIDUP';
   const status = docStatus(expiryDate);
-  const badge = status === 'aktif'
-    ? '<span class="badge aktif">Aktif</span>'
-    : status === 'tidak-aktif' ? '<span class="badge tidak-aktif">Tidak Aktif</span>' : '';
+  const badge = status === 'aktif' ? '<span class="badge aktif">Aktif</span>' : status === 'tidak-aktif' ? '<span class="badge tidak-aktif">Tidak Aktif</span>' : '';
   return `
     ${nomor ? `<div>${escapeHtml(nomor)}</div>` : '<div class="sub">Nomor belum diisi</div>'}
     ${isSeumurHidup ? '<div class="sub">Seumur Hidup</div>' : (expiryDate ? `<div class="sub">s.d. ${formatTanggal(expiryDate)}</div>` : '')}
@@ -859,7 +823,7 @@ function downloadTemplate(){
   if(typeof XLSX === 'undefined'){ alert('Modul Excel belum siap.'); return; }
   const headers = ['Nama Pegawai','NIP','Tanggal Lahir','Jenis Kelamin','Pendidikan','Profesi','Status','Jabatan Sesuai SK','Jabatan Saat Ini','Nomor STR','Nomor SIPA'];
   const contoh = ['Contoh: Siti Amelia, S.Farm., Apt.','198501012010012001','01/01/1985','Perempuan','S1 Farmasi + Apoteker','Apoteker','PNS','Apoteker Ahli Pertama','Apoteker Ruang Farmasi Rawat Jalan','STR12345678901234','SIPA1234567890'];
-  const catatan = ['CATATAN: Jenis Kelamin diisi Laki-laki / Perempuan','','Format Tanggal Lahir: DD/MM/YYYY','Pendidikan: SMA, SMK, D3 Farmasi, S1 Farmasi, S2 Farmasi + Apoteker, S1 Farmasi + Apoteker','Profesi: Apoteker, TTK, Umum, Transporter, SKM, Adminkes, S2 Farmasi','Status: PNS, PPPK, PPPK Paruh Waktu, BLUD, PT','','','','',''];
+  const catatan = ['CATATAN: Jenis Kelamin diisi Laki-laki / Perempuan','','Format Tanggal Lahir: DD/MM/YYYY','Pendidikan: SMA, SMK, D3 Farmasi, S1 Farmasi, S2 Farmasi + Apoteker, S1 Farmasi + Apoteker','Profesi: Apoteker, TTK, Umum, Transporter, SKM, Adminkes','Status: PNS, PPPK, PPPK Paruh Waktu, BLUD, PT','','','','',''];
   const ws = XLSX.utils.aoa_to_sheet([headers, contoh, catatan]);
   ws['!cols'] = headers.map(h => ({ wch: Math.max(24, h.length + 4) }));
   const wb = XLSX.utils.book_new();
@@ -914,9 +878,7 @@ const SCREEN_FOR_HASH = Object.fromEntries(Object.entries(HASH_FOR_SCREEN).map((
 function syncUrlHash(){
   const wanted = HASH_FOR_SCREEN[state.screen] || '';
   const current = location.hash.replace('#','');
-  if(current !== wanted){
-    history.replaceState(null, '', location.pathname + location.search + (wanted ? '#' + wanted : ''));
-  }
+  if(current !== wanted) history.replaceState(null, '', location.pathname + location.search + (wanted ? '#' + wanted : ''));
 }
 async function copyPageLink(btn){
   const wanted = HASH_FOR_SCREEN[state.screen] || '';
@@ -927,9 +889,6 @@ async function copyPageLink(btn){
   setTimeout(() => { btn.textContent = originalText; }, 2000);
 }
 
-// ============================================================
-// RENDER UTAMA
-// ============================================================
 function render(){
   const app = document.getElementById('app');
   if(state.loading){
@@ -953,9 +912,6 @@ function render(){
   if(state.modal === 'surat-delete') renderSuratDeleteModal();
 }
 
-// ============================================================
-// LANDING
-// ============================================================
 function renderLanding(){
   const app = document.getElementById('app');
   document.body.classList.add('landing-bg');
@@ -994,30 +950,22 @@ function renderLanding(){
       </div>
     </div>
   `;
-  document.getElementById('btn-instalasi-farmasi').addEventListener('click', () => {
-    state.farmasiMenuOpen = !state.farmasiMenuOpen; render();
-  });
-  document.getElementById('btn-database-staf').addEventListener('click', () => {
-    state.farmasiMenuOpen = false; state.screen = 'dashboard'; render();
-  });
-  document.getElementById('btn-cuti-staf').addEventListener('click', () => {
-    state.farmasiMenuOpen = false; state.screen = 'cuti'; render();
-  });
-  document.getElementById('btn-informasi-surat').addEventListener('click', () => {
-    state.farmasiMenuOpen = false; state.screen = 'informasi-surat'; render();
-  });
+  document.getElementById('btn-instalasi-farmasi').addEventListener('click', () => { state.farmasiMenuOpen = !state.farmasiMenuOpen; render(); });
+  document.getElementById('btn-database-staf').addEventListener('click', () => { state.farmasiMenuOpen = false; state.screen = 'dashboard'; render(); });
+  document.getElementById('btn-cuti-staf').addEventListener('click', () => { state.farmasiMenuOpen = false; state.screen = 'cuti'; render(); });
+  document.getElementById('btn-informasi-surat').addEventListener('click', () => { state.farmasiMenuOpen = false; state.screen = 'informasi-surat'; render(); });
 }
 
-// ============================================================
-// DASHBOARD
-// ============================================================
 function getFiltered(){
   const q = state.search.trim().toLowerCase();
   return state.staff.filter(s => {
     if(state.filterStatus && s.statusPekerjaan !== state.filterStatus) return false;
     if(state.filterPendidikan && s.pendidikan !== state.filterPendidikan) return false;
-    if(state.filterProfesi === 'S2 Farmasi'){
-      if((s.pendidikan||'').trim().toLowerCase() !== 'S2 Farmasi + Apoteker'.toLowerCase()) return false;
+    if(state.filterProfesi === 'Apoteker'){
+      const isApoteker =
+        (s.profesi || '').trim().toLowerCase() === 'apoteker' ||
+        (s.pendidikan || '').trim().toLowerCase() === 's2 farmasi + apoteker';
+      if(!isApoteker) return false;
     } else if(state.filterProfesi && (s.profesi||'').trim().toLowerCase() !== state.filterProfesi.toLowerCase()) return false;
     if(!q) return true;
     const hay = [s.nama, s.nip, s.email, s.jabatanSK, s.jabatanRuangan, s.tempatLahir].join(' ').toLowerCase();
@@ -1034,10 +982,10 @@ function computeStats(){
   const byProfesi = {};
   PROFESI_CATEGORIES.forEach(p => byProfesi[p] = 0);
   state.staff.forEach(s => {
-    if((s.pendidikan || '').trim().toLowerCase() === 'S2 Farmasi + Apoteker'.toLowerCase()){ byProfesi['S2 Farmasi']++; return; }
+    if((s.pendidikan || '').trim().toLowerCase() === 's2 farmasi + apoteker'){ byProfesi['Apoteker']++; return; }
     const p = (s.profesi || '').trim();
     const matched = PROFESI_CATEGORIES.find(c => c.toLowerCase() === p.toLowerCase());
-    if(matched && matched !== 'S2 Farmasi') byProfesi[matched]++;
+    if(matched) byProfesi[matched]++;
   });
   return { total, byStatus, perempuan, lakiLaki, byProfesi };
 }
@@ -1190,9 +1138,7 @@ function renderDashboard(){
   if(fPend) fPend.addEventListener('change', e => { state.filterPendidikan = e.target.value; render(); });
 
   const totalCard = document.querySelector('[data-stat-total]');
-  if(totalCard) totalCard.addEventListener('click', () => {
-    state.filterStatus = ''; state.filterPendidikan = ''; state.filterProfesi = ''; render();
-  });
+  if(totalCard) totalCard.addEventListener('click', () => { state.filterStatus = ''; state.filterPendidikan = ''; state.filterProfesi = ''; render(); });
   document.querySelectorAll('[data-stat-status]').forEach(card => {
     card.addEventListener('click', () => {
       const val = card.getAttribute('data-stat-status');
@@ -1230,9 +1176,6 @@ function renderDashboard(){
   });
 }
 
-// ============================================================
-// CUTI
-// ============================================================
 function renderCuti(){
   const app = document.getElementById('app');
   const year = state.cutiYear, month = state.cutiMonth;
@@ -1356,12 +1299,8 @@ function renderCuti(){
   if(btnLogin) btnLogin.addEventListener('click', () => { state.modal = 'login'; state.loginError = ''; render(); });
   const btnLogout = document.getElementById('btn-logout');
   if(btnLogout) btnLogout.addEventListener('click', () => { state.isAdmin = false; render(); });
-  document.getElementById('cuti-prev').addEventListener('click', () => {
-    state.cutiMonth--; if(state.cutiMonth < 1){ state.cutiMonth = 12; state.cutiYear--; } render();
-  });
-  document.getElementById('cuti-next').addEventListener('click', () => {
-    state.cutiMonth++; if(state.cutiMonth > 12){ state.cutiMonth = 1; state.cutiYear++; } render();
-  });
+  document.getElementById('cuti-prev').addEventListener('click', () => { state.cutiMonth--; if(state.cutiMonth < 1){ state.cutiMonth = 12; state.cutiYear--; } render(); });
+  document.getElementById('cuti-next').addEventListener('click', () => { state.cutiMonth++; if(state.cutiMonth > 12){ state.cutiMonth = 1; state.cutiYear++; } render(); });
   const btnCutiAdd = document.getElementById('btn-cuti-add');
   if(btnCutiAdd) btnCutiAdd.addEventListener('click', () => { state.cutiEditingId = null; state.modal = 'cuti-form'; render(); });
   const btnLibur = document.getElementById('btn-libur');
@@ -1379,10 +1318,7 @@ function renderCuti(){
     btn.addEventListener('click', async () => {
       const id = btn.getAttribute('data-cuti-toggle-selesai');
       const entry = state.cutiStaf.find(x => x.id === id);
-      if(entry){
-        entry.status = entry.status === 'Selesai' ? 'Berjalan' : 'Selesai';
-        await saveCutiData(); render();
-      }
+      if(entry){ entry.status = entry.status === 'Selesai' ? 'Berjalan' : 'Selesai'; await saveCutiData(); render(); }
     });
   });
   document.querySelectorAll('[data-cuti-disetujui]').forEach(sel => {
@@ -1422,9 +1358,7 @@ function renderRekapCuti(){
         <h1 class="brand-title">Daftar Staf Ambil Cuti</h1>
         <p class="brand-sub">Rekap total hari cuti tiap staf per tahun.</p>
       </div>
-      <div class="admin-zone">
-        <button class="btn secondary small" id="btn-back-cuti">← Kembali</button>
-      </div>
+      <div class="admin-zone"><button class="btn secondary small" id="btn-back-cuti">← Kembali</button></div>
     </div>
     <div class="month-nav">
       <button id="rekap-prev">←</button>
@@ -1471,9 +1405,6 @@ function renderRekapCuti(){
   document.getElementById('rekap-next').addEventListener('click', () => { state.rekapYear++; render(); });
 }
 
-// ============================================================
-// INFORMASI SURAT — dengan card layout & pagination
-// ============================================================
 function renderInformasiSurat(){
   const app = document.getElementById('app');
   const q = state.suratSearch.trim().toLowerCase();
@@ -1702,7 +1633,6 @@ function renderInformasiSurat(){
     });
   });
 
-  // Upload File Asli
   document.querySelectorAll('[data-upload-asli]').forEach(btn => {
     const id = btn.getAttribute('data-upload-asli');
     const fileInput = document.querySelector(`[data-file-asli-input="${id}"]`);
@@ -1712,10 +1642,7 @@ function renderInformasiSurat(){
       const file = e.target.files[0];
       e.target.value = '';
       if(!file) return;
-      if(file.size > SURAT_MAX_SIZE_BYTES){
-        alert(`Ukuran file (${(file.size / (1024*1024)).toFixed(1)} MB) melebihi batas 10 MB.`);
-        return;
-      }
+      if(file.size > SURAT_MAX_SIZE_BYTES){ alert(`Ukuran file melebihi batas 10 MB.`); return; }
       if(!SHEETS_API_URL){ alert('Upload otomatis ke Google Drive belum aktif.'); return; }
       const s = state.suratList.find(x => x.id === id);
       if(!s) return;
@@ -1732,19 +1659,13 @@ function renderInformasiSurat(){
           render();
         } else {
           if(statusEl) statusEl.textContent = '';
-          alert(`Gagal mengunggah file asli.\n\nPenyebab: ${result.error || 'tidak diketahui'}`);
+          alert(`Gagal: ${result.error || 'tidak diketahui'}`);
           btn.disabled = false;
         }
-      }catch(err){
-        console.error(err);
-        if(statusEl) statusEl.textContent = '';
-        alert('Gagal mengunggah file.');
-        btn.disabled = false;
-      }
+      }catch(err){ console.error(err); if(statusEl) statusEl.textContent = ''; alert('Gagal mengunggah file.'); btn.disabled = false; }
     });
   });
 
-  // Upload Hasil Tindaklanjut (FITUR BARU)
   document.querySelectorAll('[data-upload-tindaklanjut]').forEach(btn => {
     const id = btn.getAttribute('data-upload-tindaklanjut');
     const fileInput = document.querySelector(`[data-file-tindaklanjut-input="${id}"]`);
@@ -1754,10 +1675,7 @@ function renderInformasiSurat(){
       const file = e.target.files[0];
       e.target.value = '';
       if(!file) return;
-      if(file.size > SURAT_MAX_SIZE_BYTES){
-        alert(`Ukuran file (${(file.size / (1024*1024)).toFixed(1)} MB) melebihi batas 10 MB.`);
-        return;
-      }
+      if(file.size > SURAT_MAX_SIZE_BYTES){ alert(`Ukuran file melebihi batas 10 MB.`); return; }
       if(!SHEETS_API_URL){ alert('Upload otomatis ke Google Drive belum aktif.'); return; }
       const s = state.suratList.find(x => x.id === id);
       if(!s) return;
@@ -1775,15 +1693,10 @@ function renderInformasiSurat(){
           render();
         } else {
           if(statusEl) statusEl.textContent = '';
-          alert(`Gagal mengunggah file hasil tindaklanjut.\n\nPenyebab: ${result.error || 'tidak diketahui'}`);
+          alert(`Gagal: ${result.error || 'tidak diketahui'}`);
           btn.disabled = false;
         }
-      }catch(err){
-        console.error(err);
-        if(statusEl) statusEl.textContent = '';
-        alert('Gagal mengunggah file.');
-        btn.disabled = false;
-      }
+      }catch(err){ console.error(err); if(statusEl) statusEl.textContent = ''; alert('Gagal mengunggah file.'); btn.disabled = false; }
     });
   });
 
@@ -1811,9 +1724,6 @@ function renderInformasiSurat(){
   });
 }
 
-// ============================================================
-// MODAL SURAT EDIT
-// ============================================================
 function renderSuratEditModal(){
   const s = state.suratList.find(x => x.id === state.suratEditingId);
   if(!s) return;
@@ -1879,531 +1789,12 @@ function renderSuratEditModal(){
         statusEl.textContent = '✓ File diupload. Klik "Simpan Perubahan".';
       } else {
         statusEl.textContent = '';
-        alert(`Gagal mengunggah.\n\nPenyebab: ${result.error || 'tidak diketahui'}`);
+        alert(`Gagal: ${result.error || 'tidak diketahui'}`);
       }
-    }catch(err){
-      console.error(err); statusEl.textContent = ''; alert('Gagal mengunggah file.');
-    }
+    }catch(err){ console.error(err); statusEl.textContent = ''; alert('Gagal mengunggah file.'); }
     btnUploadEdit.disabled = false;
   });
 
   document.getElementById('surat-save').addEventListener('click', async () => {
     s.tanggalSurat = document.getElementById('sf-tanggal').value.trim();
-    s.hal = document.getElementById('sf-hal').value.trim();
-    s.nomorSurat = document.getElementById('sf-nomor').value.trim();
-    s.linkGoogleDrive = document.getElementById('sf-drive').value.trim();
-    await saveSuratList();
-    cancel();
-  });
-}
-
-function renderSuratDeleteModal(){
-  const s = state.suratList.find(x => x.id === state.suratDeletingId);
-  const wrap = document.createElement('div');
-  wrap.className = 'overlay';
-  wrap.id = 'overlay';
-  wrap.innerHTML = `
-    <div class="modal" style="max-width:400px;">
-      <button class="close-x" id="modal-close">×</button>
-      <h2>Hapus surat?</h2>
-      <p class="hint">Surat <strong>${escapeHtml(s ? s.hal : '')}</strong> beserta filenya akan dihapus permanen.</p>
-      <div class="modal-actions">
-        <button class="btn secondary" id="delete-cancel">Batal</button>
-        <button class="btn" id="delete-confirm" style="background:var(--danger); color:#fff; border-color:var(--danger);">Ya, Hapus</button>
-      </div>
-    </div>
-  `;
-  document.body.appendChild(wrap);
-  const cancel = () => {
-    const o = document.getElementById('overlay'); if(o) o.remove();
-    state.modal = null; state.suratDeletingId = null; render();
-  };
-  document.getElementById('modal-close').addEventListener('click', cancel);
-  document.getElementById('delete-cancel').addEventListener('click', cancel);
-  wrap.addEventListener('click', e => { if(e.target.id === 'overlay') cancel(); });
-  document.getElementById('delete-confirm').addEventListener('click', async () => {
-    const id = state.suratDeletingId;
-    const entry = state.suratList.find(x => x.id === id);
-    state.suratList = state.suratList.filter(x => x.id !== id);
-    await saveSuratList();
-    try{
-      if(entry && entry.fileChunks){
-        for(let i = 0; i < entry.fileChunks; i++) await window.storage.delete(`surat-file:${id}:${i}`, true);
-      } else {
-        await window.storage.delete(`surat-file:${id}`, true);
-      }
-    }catch(e){}
-    cancel();
-  });
-}
-
-// ============================================================
-// MODAL CUTI
-// ============================================================
-function renderCutiFormModal(){
-  const editing = state.cutiEditingId ? state.cutiStaf.find(x => x.id === state.cutiEditingId) : null;
-  const r = editing || { namaPetugas:'', depoRuangan:'', disetujuiOleh:'', keterangan:'', shift:'', tglMulai:'', tglSelesai:'' };
-  const wrap = document.createElement('div');
-  wrap.className = 'overlay';
-  wrap.id = 'overlay';
-  wrap.innerHTML = `
-    <div class="modal">
-      <button class="close-x" id="modal-close">×</button>
-      <h2>${editing ? 'Edit Cuti Staf' : 'Tambah Cuti Staf'}</h2>
-      <p class="hint">${editing ? 'Perbarui data cuti.' : 'Lengkapi data cuti staf.'}</p>
-      <form id="cuti-form">
-        <div class="field"><label>Nama Petugas</label><input type="text" id="cf-nama" value="${escapeHtml(r.namaPetugas)}" required></div>
-        <div class="field"><label>Depo/Ruangan</label><input type="text" id="cf-ruangan" value="${escapeHtml(r.depoRuangan)}"></div>
-        <div class="field">
-          <label>Disetujui Oleh <span class="opt-tag">(Opsional)</span></label>
-          <select id="cf-disetujui">
-            <option value="">Pilih…</option>
-            ${DISETUJUI_OPTIONS.map(o => `<option value="${escapeHtml(o)}" ${r.disetujuiOleh===o?'selected':''}>${o}</option>`).join('')}
-          </select>
-        </div>
-        <div class="grid2">
-          <div class="field"><label>Keterangan Cuti</label>
-            <select id="cf-keterangan">
-              <option value="">Pilih…</option>
-              ${KETERANGAN_CUTI_OPTIONS.map(o => `<option value="${escapeHtml(o)}" ${r.keterangan===o?'selected':''}>${o}</option>`).join('')}
-            </select>
-          </div>
-          <div class="field"><label>Keterangan Shift</label>
-            <select id="cf-shift">
-              <option value="">Pilih…</option>
-              ${SHIFT_OPTIONS.map(o => `<option value="${escapeHtml(o)}" ${r.shift===o?'selected':''}>${o}</option>`).join('')}
-            </select>
-          </div>
-        </div>
-        <div class="grid2">
-          <div class="field"><label>Tanggal Mulai</label><input type="date" id="cf-mulai" value="${escapeHtml(dateOnly(r.tglMulai))}" required></div>
-          <div class="field"><label>Tanggal Selesai</label><input type="date" id="cf-selesai" value="${escapeHtml(dateOnly(r.tglSelesai))}" required></div>
-        </div>
-        <div class="modal-actions">
-          <button type="button" class="btn secondary" id="form-cancel">Batal</button>
-          <button type="submit" class="btn">${editing ? 'Simpan Perubahan' : 'Tambah Cuti'}</button>
-        </div>
-      </form>
-    </div>
-  `;
-  document.body.appendChild(wrap);
-  document.getElementById('modal-close').addEventListener('click', closeCutiModal);
-  document.getElementById('form-cancel').addEventListener('click', closeCutiModal);
-  wrap.addEventListener('click', e => { if(e.target.id === 'overlay') closeCutiModal(); });
-  document.getElementById('cf-nama').focus();
-  document.getElementById('cuti-form').addEventListener('submit', async e => {
-    e.preventDefault();
-    const data = {
-      namaPetugas: document.getElementById('cf-nama').value.trim(),
-      depoRuangan: document.getElementById('cf-ruangan').value.trim(),
-      disetujuiOleh: document.getElementById('cf-disetujui').value,
-      keterangan: document.getElementById('cf-keterangan').value,
-      shift: document.getElementById('cf-shift').value,
-      tglMulai: document.getElementById('cf-mulai').value,
-      tglSelesai: document.getElementById('cf-selesai').value
-    };
-    if(!data.namaPetugas){ alert('Nama petugas wajib diisi.'); return; }
-    if(!data.tglMulai || !data.tglSelesai){ alert('Tanggal wajib diisi.'); return; }
-    if(data.tglSelesai < data.tglMulai){ alert('Tanggal selesai tidak boleh sebelum tanggal mulai.'); return; }
-    if(!data.shift){ alert('Keterangan Shift wajib dipilih.'); return; }
-    if(editing){
-      const idx = state.cutiStaf.findIndex(x => x.id === editing.id);
-      state.cutiStaf[idx] = { ...editing, ...data };
-    } else {
-      state.cutiStaf.push({ id: uid(), ...data });
-    }
-    closeCutiModal();
-    await saveCutiData();
-    render();
-  });
-}
-
-function renderCutiDeleteModal(){
-  const r = state.cutiStaf.find(x => x.id === state.cutiDeletingId);
-  const wrap = document.createElement('div');
-  wrap.className = 'overlay';
-  wrap.id = 'overlay';
-  wrap.innerHTML = `
-    <div class="modal" style="max-width:400px;">
-      <button class="close-x" id="modal-close">×</button>
-      <h2>Hapus data cuti?</h2>
-      <p class="hint">Data cuti <strong>${escapeHtml(r ? r.namaPetugas : '')}</strong> akan dihapus permanen.</p>
-      <div class="modal-actions">
-        <button class="btn secondary" id="delete-cancel">Batal</button>
-        <button class="btn" id="delete-confirm" style="background:var(--danger); color:#fff; border-color:var(--danger);">Ya, Hapus</button>
-      </div>
-    </div>
-  `;
-  document.body.appendChild(wrap);
-  document.getElementById('modal-close').addEventListener('click', closeCutiModal);
-  document.getElementById('delete-cancel').addEventListener('click', closeCutiModal);
-  wrap.addEventListener('click', e => { if(e.target.id === 'overlay') closeCutiModal(); });
-  document.getElementById('delete-confirm').addEventListener('click', async () => {
-    state.cutiStaf = state.cutiStaf.filter(x => x.id !== state.cutiDeletingId);
-    closeCutiModal();
-    await saveCutiData();
-    render();
-  });
-}
-
-function closeCutiModal(){
-  const o = document.getElementById('overlay'); if(o) o.remove();
-  state.modal = null; state.cutiEditingId = null; state.cutiDeletingId = null;
-  render();
-}
-
-function renderLiburModal(){
-  const wrap = document.createElement('div');
-  wrap.className = 'overlay';
-  wrap.id = 'overlay';
-  const sorted = [...state.liburNasional].sort();
-  wrap.innerHTML = `
-    <div class="modal" style="max-width:440px;">
-      <button class="close-x" id="modal-close">×</button>
-      <h2>📅 Hari Libur Nasional</h2>
-      <p class="hint">Tanggal di sini akan otomatis tidak dihitung sebagai hari cuti.</p>
-      <div class="field">
-        <label>Tambah Tanggal Libur</label>
-        <div style="display:flex; gap:8px;">
-          <input type="date" id="libur-input" style="flex:1;">
-          <button type="button" class="btn small" id="libur-add">Tambah</button>
-        </div>
-      </div>
-      <div style="max-height:240px; overflow-y:auto; display:flex; flex-direction:column; gap:6px; margin-top:14px;">
-        ${sorted.length === 0 ? '<p class="sub" style="text-align:center; padding:16px 0;">Belum ada tanggal libur.</p>' : sorted.map(d => `
-          <div style="display:flex; align-items:center; justify-content:space-between; background:#FAFBFA; border:1px solid var(--line); border-radius:8px; padding:8px 12px;">
-            <span style="font-size:13.5px;">${formatTanggal(d)}</span>
-            <button type="button" class="btn danger small" data-libur-remove="${d}">Hapus</button>
-          </div>
-        `).join('')}
-      </div>
-      <div class="modal-actions">
-        <button class="btn" id="libur-close">Selesai</button>
-      </div>
-    </div>
-  `;
-  document.body.appendChild(wrap);
-  document.getElementById('modal-close').addEventListener('click', closeCutiModal);
-  document.getElementById('libur-close').addEventListener('click', closeCutiModal);
-  wrap.addEventListener('click', e => { if(e.target.id === 'overlay') closeCutiModal(); });
-  document.getElementById('libur-add').addEventListener('click', async () => {
-    const val = document.getElementById('libur-input').value;
-    if(!val){ alert('Pilih tanggal dulu.'); return; }
-    if(state.liburNasional.includes(val)){ alert('Tanggal sudah ada.'); return; }
-    state.liburNasional.push(val);
-    await saveLiburNasional();
-    render();
-  });
-  document.querySelectorAll('[data-libur-remove]').forEach(btn => {
-    btn.addEventListener('click', async () => {
-      const val = btn.getAttribute('data-libur-remove');
-      state.liburNasional = state.liburNasional.filter(d => d !== val);
-      await saveLiburNasional();
-      render();
-    });
-  });
-}
-
-// ============================================================
-// MODAL LOGIN / FORM STAF / DELETE
-// ============================================================
-function renderLoginModal(){
-  const wrap = document.createElement('div');
-  wrap.className = 'overlay';
-  wrap.id = 'overlay';
-  wrap.innerHTML = `
-    <div class="modal" style="max-width:380px;">
-      <button class="close-x" id="modal-close">×</button>
-      <div class="login-icon">🔑</div>
-      <h2>Masuk sebagai Admin</h2>
-      <p class="hint">Masukkan kata sandi super admin.</p>
-      <div class="field">
-        <label>Kata sandi</label>
-        <input type="password" id="login-pass" placeholder="••••••••">
-      </div>
-      ${state.loginError ? `<div class="error-text">${state.loginError}</div>` : ''}
-      <div class="modal-actions">
-        <button class="btn secondary" id="login-cancel">Batal</button>
-        <button class="btn" id="login-submit">Masuk</button>
-      </div>
-    </div>
-  `;
-  document.body.appendChild(wrap);
-  document.getElementById('modal-close').addEventListener('click', closeModal);
-  document.getElementById('login-cancel').addEventListener('click', closeModal);
-  wrap.addEventListener('click', e => { if(e.target.id === 'overlay') closeModal(); });
-  const passInput = document.getElementById('login-pass');
-  passInput.focus();
-  const submit = () => {
-    if(passInput.value === ADMIN_PASSWORD){
-      state.isAdmin = true;
-      if(state.screen === 'landing') state.screen = 'dashboard';
-      closeModal();
-    } else {
-      state.loginError = 'Kata sandi salah.';
-      state.modal = 'login';
-      render();
-    }
-  };
-  document.getElementById('login-submit').addEventListener('click', submit);
-  passInput.addEventListener('keydown', e => { if(e.key === 'Enter') submit(); });
-}
-
-function renderFormModal(){
-  const editing = state.editingId ? state.staff.find(s => s.id === state.editingId) : null;
-  const s = editing || { nama:'', nip:'', tempatLahir:'', tanggalLahir:'', email:'', jenisKelamin:'', pendidikan:'', profesi:'', statusPekerjaan:'', jabatanSK:'', jabatanRuangan:'', keterangan:'', nomorSTR:'', tglKadaluarsaSTR:'', linkDokumenSTR:'', fileIdSTR:'', nomorSIPA:'', tglKadaluarsaSIPA:'', linkDokumenSIPA:'', fileIdSIPA:'' };
-  const wrap = document.createElement('div');
-  wrap.className = 'overlay';
-  wrap.id = 'overlay';
-  wrap.innerHTML = `
-    <div class="modal">
-      <button class="close-x" id="modal-close">×</button>
-      <h2>${editing ? 'Edit Data Staf' : 'Tambah Staf Baru'}</h2>
-      <p class="hint">${editing ? 'Perbarui data staf.' : 'Lengkapi data staf baru.'}</p>
-      <form id="staff-form">
-        <div class="field"><label>Nama staf</label><input type="text" id="f-nama" value="${escapeHtml(s.nama)}" required></div>
-        <div class="field"><label>NIP <span class="opt-tag">(Opsional)</span></label><input type="text" id="f-nip" value="${escapeHtml(s.nip)}"></div>
-        <div class="grid2">
-          <div class="field"><label>Tempat lahir <span class="opt-tag">(Opsional)</span></label><input type="text" id="f-tempat" value="${escapeHtml(s.tempatLahir)}"></div>
-          <div class="field"><label>Tanggal lahir <span class="opt-tag">(Opsional)</span></label><input type="date" id="f-tanggal" value="${escapeHtml(dateOnly(s.tanggalLahir))}"></div>
-        </div>
-        <div class="grid2">
-          <div class="field"><label>Email <span class="opt-tag">(Opsional)</span></label><input type="email" id="f-email" value="${escapeHtml(s.email)}"></div>
-          <div class="field"><label>Jenis kelamin <span class="opt-tag">(Opsional)</span></label>
-            <select id="f-jk">
-              <option value="">Pilih…</option>
-              <option value="L" ${s.jenisKelamin==='L'?'selected':''}>Laki-laki</option>
-              <option value="P" ${s.jenisKelamin==='P'?'selected':''}>Perempuan</option>
-            </select>
-          </div>
-        </div>
-        <div class="grid2">
-          <div class="field"><label>Kualifikasi pendidikan <span class="opt-tag">(Opsional)</span></label>
-            <select id="f-pendidikan">
-              <option value="">Pilih…</option>
-              ${PENDIDIKAN_OPTIONS.map(o => `<option value="${escapeHtml(o)}" ${s.pendidikan===o?'selected':''}>${o}</option>`).join('')}
-            </select>
-          </div>
-          <div class="field"><label>Profesi <span class="opt-tag">(Opsional)</span></label><input type="text" id="f-profesi" value="${escapeHtml(s.profesi)}"></div>
-        </div>
-        <div class="grid2">
-          <div class="field"><label>Status pekerjaan <span class="opt-tag">(Opsional)</span></label>
-            <select id="f-status">
-              <option value="">Pilih…</option>
-              ${STATUS_OPTIONS.map(o => `<option value="${escapeHtml(o)}" ${s.statusPekerjaan===o?'selected':''}>${o}</option>`).join('')}
-            </select>
-          </div>
-        </div>
-        <div class="grid2">
-          <div class="field"><label>Jabatan sesuai SK <span class="opt-tag">(Opsional)</span></label><input type="text" id="f-jabatan-sk" value="${escapeHtml(s.jabatanSK)}"></div>
-          <div class="field"><label>Jabatan di ruangan <span class="opt-tag">(Opsional)</span></label><input type="text" id="f-jabatan-ruangan" value="${escapeHtml(s.jabatanRuangan)}"></div>
-        </div>
-        <div class="field"><label>Keterangan <span class="opt-tag">(Opsional)</span></label><textarea id="f-keterangan">${escapeHtml(s.keterangan)}</textarea></div>
-
-        <hr style="border:none; border-top:1px solid var(--line); margin:18px 0 16px;">
-        <p class="hint" style="margin-bottom:14px; font-weight:600; color:var(--teal-2);">Legalitas Profesi <span class="opt-tag" style="font-weight:400;">(Opsional)</span></p>
-        <div class="grid2">
-          <div class="field"><label>Nomor STR</label><input type="text" id="f-nomor-str" value="${escapeHtml(s.nomorSTR)}"></div>
-          <div class="field">
-            <label>Tanggal kadaluarsa STR</label>
-            <input type="date" id="f-tgl-str" value="${escapeHtml(dateOnly(s.tglKadaluarsaSTR))}" ${s.tglKadaluarsaSTR === 'SEUMUR_HIDUP' ? 'disabled' : ''}>
-            <label style="display:flex; align-items:center; gap:6px; margin-top:6px; font-weight:400; font-size:12.5px; color:var(--ink-soft); cursor:pointer;">
-              <input type="checkbox" id="f-str-seumur-hidup" ${s.tglKadaluarsaSTR === 'SEUMUR_HIDUP' ? 'checked' : ''} style="width:auto; margin:0;">
-              STR Seumur Hidup
-            </label>
-          </div>
-        </div>
-        <div class="field">
-          <label>Scan STR <span class="opt-tag">(Opsional)</span></label>
-          <div class="doc-box">
-            <div id="doc-row-str"></div>
-            <div class="sub" id="upload-str-status"></div>
-            <button type="button" class="link-manual-toggle" id="toggle-manual-str">atau tempel link manual</button>
-            <input type="url" id="f-link-str" value="${escapeHtml(s.linkDokumenSTR)}" placeholder="https://drive.google.com/…" style="display:none; margin-top:6px;">
-          </div>
-          <input type="file" id="file-upload-str" accept=".pdf,.jpg,.jpeg,.png" style="display:none;">
-          <input type="hidden" id="f-fileid-str" value="${escapeHtml(s.fileIdSTR)}">
-        </div>
-        <div class="grid2">
-          <div class="field"><label>Nomor SIPA</label><input type="text" id="f-nomor-sipa" value="${escapeHtml(s.nomorSIPA)}"></div>
-          <div class="field"><label>Tanggal kadaluarsa SIPA</label><input type="date" id="f-tgl-sipa" value="${escapeHtml(dateOnly(s.tglKadaluarsaSIPA))}"></div>
-        </div>
-        <div class="field">
-          <label>Scan SIPA <span class="opt-tag">(Opsional)</span></label>
-          <div class="doc-box">
-            <div id="doc-row-sipa"></div>
-            <div class="sub" id="upload-sipa-status"></div>
-            <button type="button" class="link-manual-toggle" id="toggle-manual-sipa">atau tempel link manual</button>
-            <input type="url" id="f-link-sipa" value="${escapeHtml(s.linkDokumenSIPA)}" placeholder="https://drive.google.com/…" style="display:none; margin-top:6px;">
-          </div>
-          <input type="file" id="file-upload-sipa" accept=".pdf,.jpg,.jpeg,.png" style="display:none;">
-          <input type="hidden" id="f-fileid-sipa" value="${escapeHtml(s.fileIdSIPA)}">
-        </div>
-        <div class="modal-actions">
-          <button type="button" class="btn secondary" id="form-cancel">Batal</button>
-          <button type="submit" class="btn">${editing ? 'Simpan Perubahan' : 'Tambah Staf'}</button>
-        </div>
-      </form>
-    </div>
-  `;
-  document.body.appendChild(wrap);
-  document.getElementById('modal-close').addEventListener('click', closeModal);
-  document.getElementById('form-cancel').addEventListener('click', closeModal);
-  wrap.addEventListener('click', e => { if(e.target.id === 'overlay') closeModal(); });
-  document.getElementById('f-nama').focus();
-
-  const chkSeumurHidupStr = document.getElementById('f-str-seumur-hidup');
-  const tglStrInput = document.getElementById('f-tgl-str');
-  if(chkSeumurHidupStr && tglStrInput){
-    chkSeumurHidupStr.addEventListener('change', () => {
-      if(chkSeumurHidupStr.checked){ tglStrInput.value = ''; tglStrInput.disabled = true; }
-      else { tglStrInput.disabled = false; }
-    });
-  }
-
-  function wireDocUpload(rowId, fileInputId, linkInputId, fileIdInputId, statusId, toggleId, docType, label){
-    const fileInput = document.getElementById(fileInputId);
-    const linkInput = document.getElementById(linkInputId);
-    const fileIdInput = document.getElementById(fileIdInputId);
-    const toggleBtn = document.getElementById(toggleId);
-    const statusEl = document.getElementById(statusId);
-    if(!fileInput || !linkInput) return;
-
-    function renderRow(){
-      const row = document.getElementById(rowId);
-      const hasLink = !!linkInput.value;
-      row.innerHTML = hasLink ? `
-        <span class="doc-chip">📄 File tersimpan</span>
-        <button type="button" class="btn secondary small" data-act="view">Lihat File</button>
-        <button type="button" class="btn secondary small" data-act="replace">Ganti File</button>
-      ` : `<button type="button" class="btn secondary small" data-act="upload">⬆ ${label}</button>`;
-      const viewBtn = row.querySelector('[data-act="view"]');
-      const replaceBtn = row.querySelector('[data-act="replace"]');
-      const uploadBtn = row.querySelector('[data-act="upload"]');
-      if(viewBtn) viewBtn.addEventListener('click', () => openFilePreviewModal(fileIdInput.value || linkInput.value, linkInput.value));
-      if(replaceBtn) replaceBtn.addEventListener('click', () => fileInput.click());
-      if(uploadBtn) uploadBtn.addEventListener('click', () => fileInput.click());
-    }
-
-    if(toggleBtn){
-      toggleBtn.addEventListener('click', () => {
-        linkInput.style.display = linkInput.style.display === 'none' ? 'block' : 'none';
-      });
-    }
-
-    fileInput.addEventListener('change', async (e) => {
-      const file = e.target.files[0]; e.target.value = '';
-      if(!file) return;
-      if(!SHEETS_API_URL){ alert('Upload otomatis belum aktif.'); return; }
-      if(file.size > SURAT_MAX_SIZE_BYTES){ alert('Ukuran melebihi 10 MB.'); return; }
-      if(statusEl) statusEl.textContent = 'Mengunggah…';
-      try{
-        const base64 = await fileToBase64(file);
-        const result = await uploadFileToDrive(base64, file.name, docType, file.type || 'application/octet-stream');
-        if(result.url){
-          linkInput.value = result.url; fileIdInput.value = result.fileId || '';
-          if(statusEl) statusEl.textContent = '✓ Berhasil diupload.';
-          renderRow();
-        } else {
-          if(statusEl) statusEl.textContent = '';
-          alert(`Gagal mengunggah.\n\nPenyebab: ${result.error || 'tidak diketahui'}`);
-        }
-      }catch(err){
-        console.error(err); if(statusEl) statusEl.textContent = ''; alert('Gagal mengunggah.');
-      }
-    });
-
-    renderRow();
-  }
-  wireDocUpload('doc-row-str', 'file-upload-str', 'f-link-str', 'f-fileid-str', 'upload-str-status', 'toggle-manual-str', 'str', 'Upload Scan STR');
-  wireDocUpload('doc-row-sipa', 'file-upload-sipa', 'f-link-sipa', 'f-fileid-sipa', 'upload-sipa-status', 'toggle-manual-sipa', 'sipa', 'Upload Scan SIPA');
-
-  document.getElementById('staff-form').addEventListener('submit', async e => {
-    e.preventDefault();
-    const data = {
-      nama: document.getElementById('f-nama').value.trim(),
-      nip: document.getElementById('f-nip').value.trim(),
-      tempatLahir: document.getElementById('f-tempat').value.trim(),
-      tanggalLahir: document.getElementById('f-tanggal').value,
-      email: document.getElementById('f-email').value.trim(),
-      jenisKelamin: document.getElementById('f-jk').value,
-      pendidikan: document.getElementById('f-pendidikan').value,
-      profesi: document.getElementById('f-profesi').value.trim(),
-      statusPekerjaan: document.getElementById('f-status').value,
-      jabatanSK: document.getElementById('f-jabatan-sk').value.trim(),
-      jabatanRuangan: document.getElementById('f-jabatan-ruangan').value.trim(),
-      keterangan: document.getElementById('f-keterangan').value.trim(),
-      nomorSTR: document.getElementById('f-nomor-str').value.trim(),
-      tglKadaluarsaSTR: document.getElementById('f-str-seumur-hidup').checked ? 'SEUMUR_HIDUP' : document.getElementById('f-tgl-str').value,
-      linkDokumenSTR: document.getElementById('f-link-str').value.trim(),
-      fileIdSTR: document.getElementById('f-fileid-str').value.trim(),
-      nomorSIPA: document.getElementById('f-nomor-sipa').value.trim(),
-      tglKadaluarsaSIPA: document.getElementById('f-tgl-sipa').value,
-      linkDokumenSIPA: document.getElementById('f-link-sipa').value.trim(),
-      fileIdSIPA: document.getElementById('f-fileid-sipa').value.trim()
-    };
-    if(!data.nama){ alert('Nama staf wajib diisi.'); return; }
-    if(editing){
-      const idx = state.staff.findIndex(x => x.id === editing.id);
-      state.staff[idx] = { ...editing, ...data };
-    } else {
-      state.staff.push({ id: uid(), ...data });
-    }
-    closeModal();
-    await saveData();
-    render();
-  });
-}
-
-function renderDeleteModal(){
-  const s = state.staff.find(x => x.id === state.deletingId);
-  const wrap = document.createElement('div');
-  wrap.className = 'overlay';
-  wrap.id = 'overlay';
-  wrap.innerHTML = `
-    <div class="modal" style="max-width:400px;">
-      <button class="close-x" id="modal-close">×</button>
-      <h2>Hapus data staf?</h2>
-      <p class="hint">Data <strong>${escapeHtml(s ? s.nama : '')}</strong> akan dihapus permanen.</p>
-      <div class="modal-actions">
-        <button class="btn secondary" id="delete-cancel">Batal</button>
-        <button class="btn danger" id="delete-confirm" style="background:var(--danger); color:#fff; border-color:var(--danger);">Ya, Hapus</button>
-      </div>
-    </div>
-  `;
-  document.body.appendChild(wrap);
-  document.getElementById('modal-close').addEventListener('click', closeModal);
-  document.getElementById('delete-cancel').addEventListener('click', closeModal);
-  wrap.addEventListener('click', e => { if(e.target.id === 'overlay') closeModal(); });
-  document.getElementById('delete-confirm').addEventListener('click', async () => {
-    state.staff = state.staff.filter(x => x.id !== state.deletingId);
-    closeModal();
-    await saveData();
-    render();
-  });
-}
-
-function closeModal(){
-  const o = document.getElementById('overlay'); if(o) o.remove();
-  state.modal = null; state.editingId = null; state.deletingId = null;
-  render();
-}
-
-// Init
-(function applyInitialHash(){
-  const hash = location.hash.replace('#','');
-  if(hash && SCREEN_FOR_HASH[hash]) state.screen = SCREEN_FOR_HASH[hash];
-  if(new URLSearchParams(location.search).has('shared')){
-    state.restrictedShare = true;
-    state.restrictedScreen = state.screen;
-  }
-})();
-window.addEventListener('hashchange', () => {
-  if(state.restrictedShare){
-    if(location.hash.replace('#','') !== (HASH_FOR_SCREEN[state.restrictedScreen] || '')) syncUrlHash();
-  }
-});
-loadData();
-</script>
-</body>
-</html>
+    s
