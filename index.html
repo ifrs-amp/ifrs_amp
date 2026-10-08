@@ -31,12 +31,11 @@
   .home-link{background:none;border:none;color:var(--ink-soft);font-size:12px;font-weight:600;padding:0 0 8px;cursor:pointer;letter-spacing:.02em;}
   .home-link:hover{color:var(--teal-2);}
 
+  /* Landing — tanpa hero banner & tanpa logo atas */
   .landing-wrap{max-width:1180px;margin:0 auto;padding:40px 20px 60px;position:relative;z-index:1;min-height:100vh;display:flex;flex-direction:column;justify-content:center;}
-  .landing-logo-top{display:flex;justify-content:center;margin-bottom:36px;}
-  .landing-logo-top img{width:auto;max-width:340px;background:#fff;border-radius:16px;padding:12px 20px;box-shadow:0 8px 24px rgba(18,63,62,.18);}
 
-  .orbit-label{text-align:center;font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-soft);margin:0 0 26px;}
-   .orbit-grid{display:grid;grid-template-columns:1fr 1fr 1fr;grid-template-rows:auto auto auto;align-items:center;justify-items:center;gap:36px;max-width:760px;margin:0 auto;}
+  .orbit-label{text-align:center;font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:var(--ink-soft);margin:0 0 40px;font-weight:600;}
+  .orbit-grid{display:grid;grid-template-columns:1fr 1fr 1fr;grid-template-rows:auto auto auto;align-items:center;justify-items:center;gap:36px;max-width:760px;margin:0 auto;}
   .orbit-circle-btn{width:190px;height:190px;border-radius:50%;border:none;cursor:pointer;background:linear-gradient(160deg,var(--teal) 0%,var(--teal-2) 100%);color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;font-family:'Inter',sans-serif;font-weight:700;font-size:17px;text-align:center;padding:16px;box-shadow:0 16px 40px rgba(18,63,62,.30);transition:transform .18s ease,box-shadow .18s ease;}
   .orbit-circle-btn:hover{transform:translateY(-5px) scale(1.05);box-shadow:0 22px 50px rgba(18,63,62,.38);}
   .orbit-circle-btn svg{width:52px;height:52px;}
@@ -101,7 +100,7 @@
   .stat .num{font-family:'Fraunces',serif;font-size:28px;font-weight:600;color:var(--teal);line-height:1;}
   .stat .label{font-size:12px;color:var(--ink-soft);margin-top:6px;}
 
-  /* Toolbar - STICKY */
+  /* Toolbar — STICKY */
   .toolbar{
     display:flex;flex-wrap:wrap;gap:10px;align-items:center;
     position:sticky;top:0;z-index:60;
@@ -921,9 +920,6 @@ function renderLanding(){
     <div class="bg-blob bg-blob-2"></div>
     <div class="bg-blob bg-blob-3"></div>
     <div class="landing-wrap">
-      <div class="landing-logo-top">
-        <img src="${LOGO_SRC}" alt="Logo"/>
-      </div>
       <p class="orbit-label">Menu Utama</p>
       <div class="orbit-grid">
         <div class="orbit-top-popup ${state.farmasiMenuOpen ? 'open' : ''}">
