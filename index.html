@@ -1797,4 +1797,512 @@ function renderSuratEditModal(){
 
   document.getElementById('surat-save').addEventListener('click', async () => {
     s.tanggalSurat = document.getElementById('sf-tanggal').value.trim();
-    s
+    s.hal = document.getElementById('sf-hal').value.trim();
+    s.nomorSurat = document.getElementById('sf-nomor').value.trim();
+    s.linkGoogleDrive = document.getElementById('sf-drive').value.trim();
+    await saveSuratList();
+    cancel();
+  });
+}
+
+function renderSuratDeleteModal(){
+  const s = state.suratList.find(x => x.id === state.suratDeletingId);
+  const wrap = document.createElement('div');
+  wrap.className = 'overlay';
+  wrap.id = 'overlay';
+  wrap.innerHTML = `
+    <div class="modal" style="max-width:400px;">
+      <button class="close-x" id="modal-close">×</button>
+      <h2>Hapus surat?</h2>
+      <p class="hint">Surat <strong>${escapeHtml(s ? s.hal : '')}</strong> beserta filenya akan dihapus permanen.</p>
+      <div class="modal-actions">
+        <button class="btn secondary" id="delete-cancel">Batal</button>
+        <button class="btn" id="delete-confirm" style="background:var(--danger); color:#fff; border-color:var(--danger);">Ya, Hapus</button>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(wrap);
+  const cancel = () => {
+    const o = document.getElementById('overlay'); if(o) o.remove();
+    state.modal = null; state.suratDeletingId = null; render();
+  };
+  document.getElementById('modal-close').addEventListener('click', cancel);
+  document.getElementById('delete-cancel').addEventListener('click', cancel);
+  wrap.addEventListener('click', e => { if(e.target.id === 'overlay') cancel(); });
+  document.getElementById('delete-confirm').addEventListener('click', async () => {
+    const id = state.suratDeletingId;
+    const entry = state.suratList.find(x => x.id === id);
+    state.suratList = state.suratList.filter(x => x.id !== id);
+    await saveSuratList();
+    try{
+      if(entry && entry.fileChunks){
+        for(let i = 0; i < entry.fileChunks; i++) await window.storage.delete(`surat-file:${id}:${i}`, true);
+      } else {
+        await window.storage.delete(`surat-file:${id}`, true);
+      }
+    }catch(e){}
+    cancel();
+  });
+}
+
+function renderCutiFormModal(){
+  const editing = state.cutiEditingId ? state.cutiStaf.find(x => x.id === state.cutiEditingId) : null;
+  const r = editing || { namaPetugas:'', depoRuangan:'', disetujuiOleh:'', keterangan:'', shift:'', tglMulai:'', tglSelesai:'' };
+  const wrap = document.createElement('div');
+  wrap.className = 'overlay';
+  wrap.id = 'overlay';
+  wrap.innerHTML = `
+    <div class="modal">
+      <button class="close-x" id="modal-close">×</button>
+      <h2>${editing ? 'Edit Cuti Staf' : 'Tambah Cuti Staf'}</h2>
+      <p class="hint">${editing ? 'Perbarui data cuti.' : 'Lengkapi data cuti staf.'}</p>
+      <form id="cuti-form">
+        <div class="field"><label>Nama Petugas</label><input type="text" id="cf-nama" value="${escapeHtml(r.namaPetugas)}" required></div>
+        <div class="field"><label>Depo/Ruangan</label><input type="text" id="cf-ruangan" value="${escapeHtml(r.depoRuangan)}"></div>
+        <div class="field">
+          <label>Disetujui Oleh <span class="opt-tag">(Opsional)</span></label>
+          <select id="cf-disetujui">
+            <option value="">Pilih…</option>
+            ${DISETUJUI_OPTIONS.map(o => `<option value="${escapeHtml(o)}" ${r.disetujuiOleh===o?'selected':''}>${o}</option>`).join('')}
+          </select>
+        </div>
+        <div class="grid2">
+          <div class="field"><label>Keterangan Cuti</label>
+            <select id="cf-keterangan">
+              <option value="">Pilih…</option>
+              ${KETERANGAN_CUTI_OPTIONS.map(o => `<option value="${escapeHtml(o)}" ${r.keterangan===o?'selected':''}>${o}</option>`).join('')}
+            </select>
+          </div>
+          <div class="field"><label>Keterangan Shift</label>
+            <select id="cf-shift">
+              <option value="">Pilih…</option>
+              ${SHIFT_OPTIONS.map(o => `<option value="${escapeHtml(o)}" ${r.shift===o?'selected':''}>${o}</option>`).join('')}
+            </select>
+          </div>
+        </div>
+        <div class="grid2">
+          <div class="field"><label>Tanggal Mulai</label><input type="date" id="cf-mulai" value="${escapeHtml(dateOnly(r.tglMulai))}" required></div>
+          <div class="field"><label>Tanggal Selesai</label><input type="date" id="cf-selesai" value="${escapeHtml(dateOnly(r.tglSelesai))}" required></div>
+        </div>
+        <div class="modal-actions">
+          <button type="button" class="btn secondary" id="form-cancel">Batal</button>
+          <button type="submit" class="btn">${editing ? 'Simpan Perubahan' : 'Tambah Cuti'}</button>
+        </div>
+      </form>
+    </div>
+  `;
+  document.body.appendChild(wrap);
+  document.getElementById('modal-close').addEventListener('click', closeCutiModal);
+  document.getElementById('form-cancel').addEventListener('click', closeCutiModal);
+  wrap.addEventListener('click', e => { if(e.target.id === 'overlay') closeCutiModal(); });
+  document.getElementById('cf-nama').focus();
+  document.getElementById('cuti-form').addEventListener('submit', async e => {
+    e.preventDefault();
+    const data = {
+      namaPetugas: document.getElementById('cf-nama').value.trim(),
+      depoRuangan: document.getElementById('cf-ruangan').value.trim(),
+      disetujuiOleh: document.getElementById('cf-disetujui').value,
+      keterangan: document.getElementById('cf-keterangan').value,
+      shift: document.getElementById('cf-shift').value,
+      tglMulai: document.getElementById('cf-mulai').value,
+      tglSelesai: document.getElementById('cf-selesai').value
+    };
+    if(!data.namaPetugas){ alert('Nama petugas wajib diisi.'); return; }
+    if(!data.tglMulai || !data.tglSelesai){ alert('Tanggal wajib diisi.'); return; }
+    if(data.tglSelesai < data.tglMulai){ alert('Tanggal selesai tidak boleh sebelum tanggal mulai.'); return; }
+    if(!data.shift){ alert('Keterangan Shift wajib dipilih.'); return; }
+    if(editing){
+      const idx = state.cutiStaf.findIndex(x => x.id === editing.id);
+      state.cutiStaf[idx] = { ...editing, ...data };
+    } else {
+      state.cutiStaf.push({ id: uid(), ...data });
+    }
+    closeCutiModal();
+    await saveCutiData();
+    render();
+  });
+}
+
+function renderCutiDeleteModal(){
+  const r = state.cutiStaf.find(x => x.id === state.cutiDeletingId);
+  const wrap = document.createElement('div');
+  wrap.className = 'overlay';
+  wrap.id = 'overlay';
+  wrap.innerHTML = `
+    <div class="modal" style="max-width:400px;">
+      <button class="close-x" id="modal-close">×</button>
+      <h2>Hapus data cuti?</h2>
+      <p class="hint">Data cuti <strong>${escapeHtml(r ? r.namaPetugas : '')}</strong> akan dihapus permanen.</p>
+      <div class="modal-actions">
+        <button class="btn secondary" id="delete-cancel">Batal</button>
+        <button class="btn" id="delete-confirm" style="background:var(--danger); color:#fff; border-color:var(--danger);">Ya, Hapus</button>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(wrap);
+  document.getElementById('modal-close').addEventListener('click', closeCutiModal);
+  document.getElementById('delete-cancel').addEventListener('click', closeCutiModal);
+  wrap.addEventListener('click', e => { if(e.target.id === 'overlay') closeCutiModal(); });
+  document.getElementById('delete-confirm').addEventListener('click', async () => {
+    state.cutiStaf = state.cutiStaf.filter(x => x.id !== state.cutiDeletingId);
+    closeCutiModal();
+    await saveCutiData();
+    render();
+  });
+}
+
+function closeCutiModal(){
+  const o = document.getElementById('overlay'); if(o) o.remove();
+  state.modal = null; state.cutiEditingId = null; state.cutiDeletingId = null;
+  render();
+}
+
+function renderLiburModal(){
+  const wrap = document.createElement('div');
+  wrap.className = 'overlay';
+  wrap.id = 'overlay';
+  const sorted = [...state.liburNasional].sort();
+  wrap.innerHTML = `
+    <div class="modal" style="max-width:440px;">
+      <button class="close-x" id="modal-close">×</button>
+      <h2>📅 Hari Libur Nasional</h2>
+      <p class="hint">Tanggal di sini akan otomatis tidak dihitung sebagai hari cuti.</p>
+      <div class="field">
+        <label>Tambah Tanggal Libur</label>
+        <div style="display:flex; gap:8px;">
+          <input type="date" id="libur-input" style="flex:1;">
+          <button type="button" class="btn small" id="libur-add">Tambah</button>
+        </div>
+      </div>
+      <div style="max-height:240px; overflow-y:auto; display:flex; flex-direction:column; gap:6px; margin-top:14px;">
+        ${sorted.length === 0 ? '<p class="sub" style="text-align:center; padding:16px 0;">Belum ada tanggal libur.</p>' : sorted.map(d => `
+          <div style="display:flex; align-items:center; justify-content:space-between; background:#FAFBFA; border:1px solid var(--line); border-radius:8px; padding:8px 12px;">
+            <span style="font-size:13.5px;">${formatTanggal(d)}</span>
+            <button type="button" class="btn danger small" data-libur-remove="${d}">Hapus</button>
+          </div>
+        `).join('')}
+      </div>
+      <div class="modal-actions">
+        <button class="btn" id="libur-close">Selesai</button>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(wrap);
+  document.getElementById('modal-close').addEventListener('click', closeCutiModal);
+  document.getElementById('libur-close').addEventListener('click', closeCutiModal);
+  wrap.addEventListener('click', e => { if(e.target.id === 'overlay') closeCutiModal(); });
+  document.getElementById('libur-add').addEventListener('click', async () => {
+    const val = document.getElementById('libur-input').value;
+    if(!val){ alert('Pilih tanggal dulu.'); return; }
+    if(state.liburNasional.includes(val)){ alert('Tanggal sudah ada.'); return; }
+    state.liburNasional.push(val);
+    await saveLiburNasional();
+    render();
+  });
+  document.querySelectorAll('[data-libur-remove]').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const val = btn.getAttribute('data-libur-remove');
+      state.liburNasional = state.liburNasional.filter(d => d !== val);
+      await saveLiburNasional();
+      render();
+    });
+  });
+}
+
+function renderLoginModal(){
+  const wrap = document.createElement('div');
+  wrap.className = 'overlay';
+  wrap.id = 'overlay';
+  wrap.innerHTML = `
+    <div class="modal" style="max-width:380px;">
+      <button class="close-x" id="modal-close">×</button>
+      <div class="login-icon">🔑</div>
+      <h2>Masuk sebagai Admin</h2>
+      <p class="hint">Masukkan kata sandi super admin.</p>
+      <div class="field">
+        <label>Kata sandi</label>
+        <input type="password" id="login-pass" placeholder="••••••••">
+      </div>
+      ${state.loginError ? `<div class="error-text">${state.loginError}</div>` : ''}
+      <div class="modal-actions">
+        <button class="btn secondary" id="login-cancel">Batal</button>
+        <button class="btn" id="login-submit">Masuk</button>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(wrap);
+  document.getElementById('modal-close').addEventListener('click', closeModal);
+  document.getElementById('login-cancel').addEventListener('click', closeModal);
+  wrap.addEventListener('click', e => { if(e.target.id === 'overlay') closeModal(); });
+  const passInput = document.getElementById('login-pass');
+  passInput.focus();
+  const submit = () => {
+    if(passInput.value === ADMIN_PASSWORD){
+      state.isAdmin = true;
+      if(state.screen === 'landing') state.screen = 'dashboard';
+      closeModal();
+    } else {
+      state.loginError = 'Kata sandi salah.';
+      state.modal = 'login';
+      render();
+    }
+  };
+  document.getElementById('login-submit').addEventListener('click', submit);
+  passInput.addEventListener('keydown', e => { if(e.key === 'Enter') submit(); });
+}
+
+function renderFormModal(){
+  const editing = state.editingId ? state.staff.find(s => s.id === state.editingId) : null;
+  const s = editing || { nama:'', nip:'', tempatLahir:'', tanggalLahir:'', email:'', jenisKelamin:'', pendidikan:'', profesi:'', statusPekerjaan:'', jabatanSK:'', jabatanRuangan:'', keterangan:'', nomorSTR:'', tglKadaluarsaSTR:'', linkDokumenSTR:'', fileIdSTR:'', nomorSIPA:'', tglKadaluarsaSIPA:'', linkDokumenSIPA:'', fileIdSIPA:'' };
+  const wrap = document.createElement('div');
+  wrap.className = 'overlay';
+  wrap.id = 'overlay';
+  wrap.innerHTML = `
+    <div class="modal">
+      <button class="close-x" id="modal-close">×</button>
+      <h2>${editing ? 'Edit Data Staf' : 'Tambah Staf Baru'}</h2>
+      <p class="hint">${editing ? 'Perbarui data staf.' : 'Lengkapi data staf baru.'}</p>
+      <form id="staff-form">
+        <div class="field"><label>Nama staf</label><input type="text" id="f-nama" value="${escapeHtml(s.nama)}" required></div>
+        <div class="field"><label>NIP <span class="opt-tag">(Opsional)</span></label><input type="text" id="f-nip" value="${escapeHtml(s.nip)}"></div>
+        <div class="grid2">
+          <div class="field"><label>Tempat lahir <span class="opt-tag">(Opsional)</span></label><input type="text" id="f-tempat" value="${escapeHtml(s.tempatLahir)}"></div>
+          <div class="field"><label>Tanggal lahir <span class="opt-tag">(Opsional)</span></label><input type="date" id="f-tanggal" value="${escapeHtml(dateOnly(s.tanggalLahir))}"></div>
+        </div>
+        <div class="grid2">
+          <div class="field"><label>Email <span class="opt-tag">(Opsional)</span></label><input type="email" id="f-email" value="${escapeHtml(s.email)}"></div>
+          <div class="field"><label>Jenis kelamin <span class="opt-tag">(Opsional)</span></label>
+            <select id="f-jk">
+              <option value="">Pilih…</option>
+              <option value="L" ${s.jenisKelamin==='L'?'selected':''}>Laki-laki</option>
+              <option value="P" ${s.jenisKelamin==='P'?'selected':''}>Perempuan</option>
+            </select>
+          </div>
+        </div>
+        <div class="grid2">
+          <div class="field"><label>Kualifikasi pendidikan <span class="opt-tag">(Opsional)</span></label>
+            <select id="f-pendidikan">
+              <option value="">Pilih…</option>
+              ${PENDIDIKAN_OPTIONS.map(o => `<option value="${escapeHtml(o)}" ${s.pendidikan===o?'selected':''}>${o}</option>`).join('')}
+            </select>
+          </div>
+          <div class="field"><label>Profesi <span class="opt-tag">(Opsional)</span></label><input type="text" id="f-profesi" value="${escapeHtml(s.profesi)}"></div>
+        </div>
+        <div class="grid2">
+          <div class="field"><label>Status pekerjaan <span class="opt-tag">(Opsional)</span></label>
+            <select id="f-status">
+              <option value="">Pilih…</option>
+              ${STATUS_OPTIONS.map(o => `<option value="${escapeHtml(o)}" ${s.statusPekerjaan===o?'selected':''}>${o}</option>`).join('')}
+            </select>
+          </div>
+        </div>
+        <div class="grid2">
+          <div class="field"><label>Jabatan sesuai SK <span class="opt-tag">(Opsional)</span></label><input type="text" id="f-jabatan-sk" value="${escapeHtml(s.jabatanSK)}"></div>
+          <div class="field"><label>Jabatan di ruangan <span class="opt-tag">(Opsional)</span></label><input type="text" id="f-jabatan-ruangan" value="${escapeHtml(s.jabatanRuangan)}"></div>
+        </div>
+        <div class="field"><label>Keterangan <span class="opt-tag">(Opsional)</span></label><textarea id="f-keterangan">${escapeHtml(s.keterangan)}</textarea></div>
+
+        <hr style="border:none; border-top:1px solid var(--line); margin:18px 0 16px;">
+        <p class="hint" style="margin-bottom:14px; font-weight:600; color:var(--teal-2);">Legalitas Profesi <span class="opt-tag" style="font-weight:400;">(Opsional)</span></p>
+        <div class="grid2">
+          <div class="field"><label>Nomor STR</label><input type="text" id="f-nomor-str" value="${escapeHtml(s.nomorSTR)}"></div>
+          <div class="field">
+            <label>Tanggal kadaluarsa STR</label>
+            <input type="date" id="f-tgl-str" value="${escapeHtml(dateOnly(s.tglKadaluarsaSTR))}" ${s.tglKadaluarsaSTR === 'SEUMUR_HIDUP' ? 'disabled' : ''}>
+            <label style="display:flex; align-items:center; gap:6px; margin-top:6px; font-weight:400; font-size:12.5px; color:var(--ink-soft); cursor:pointer;">
+              <input type="checkbox" id="f-str-seumur-hidup" ${s.tglKadaluarsaSTR === 'SEUMUR_HIDUP' ? 'checked' : ''} style="width:auto; margin:0;">
+              STR Seumur Hidup
+            </label>
+          </div>
+        </div>
+        <div class="field">
+          <label>Scan STR <span class="opt-tag">(Opsional)</span></label>
+          <div class="doc-box">
+            <div id="doc-row-str"></div>
+            <div class="sub" id="upload-str-status"></div>
+            <button type="button" class="link-manual-toggle" id="toggle-manual-str">atau tempel link manual</button>
+            <input type="url" id="f-link-str" value="${escapeHtml(s.linkDokumenSTR)}" placeholder="https://drive.google.com/…" style="display:none; margin-top:6px;">
+          </div>
+          <input type="file" id="file-upload-str" accept=".pdf,.jpg,.jpeg,.png" style="display:none;">
+          <input type="hidden" id="f-fileid-str" value="${escapeHtml(s.fileIdSTR)}">
+        </div>
+        <div class="grid2">
+          <div class="field"><label>Nomor SIPA</label><input type="text" id="f-nomor-sipa" value="${escapeHtml(s.nomorSIPA)}"></div>
+          <div class="field"><label>Tanggal kadaluarsa SIPA</label><input type="date" id="f-tgl-sipa" value="${escapeHtml(dateOnly(s.tglKadaluarsaSIPA))}"></div>
+        </div>
+        <div class="field">
+          <label>Scan SIPA <span class="opt-tag">(Opsional)</span></label>
+          <div class="doc-box">
+            <div id="doc-row-sipa"></div>
+            <div class="sub" id="upload-sipa-status"></div>
+            <button type="button" class="link-manual-toggle" id="toggle-manual-sipa">atau tempel link manual</button>
+            <input type="url" id="f-link-sipa" value="${escapeHtml(s.linkDokumenSIPA)}" placeholder="https://drive.google.com/…" style="display:none; margin-top:6px;">
+          </div>
+          <input type="file" id="file-upload-sipa" accept=".pdf,.jpg,.jpeg,.png" style="display:none;">
+          <input type="hidden" id="f-fileid-sipa" value="${escapeHtml(s.fileIdSIPA)}">
+        </div>
+        <div class="modal-actions">
+          <button type="button" class="btn secondary" id="form-cancel">Batal</button>
+          <button type="submit" class="btn">${editing ? 'Simpan Perubahan' : 'Tambah Staf'}</button>
+        </div>
+      </form>
+    </div>
+  `;
+  document.body.appendChild(wrap);
+  document.getElementById('modal-close').addEventListener('click', closeModal);
+  document.getElementById('form-cancel').addEventListener('click', closeModal);
+  wrap.addEventListener('click', e => { if(e.target.id === 'overlay') closeModal(); });
+  document.getElementById('f-nama').focus();
+
+  const chkSeumurHidupStr = document.getElementById('f-str-seumur-hidup');
+  const tglStrInput = document.getElementById('f-tgl-str');
+  if(chkSeumurHidupStr && tglStrInput){
+    chkSeumurHidupStr.addEventListener('change', () => {
+      if(chkSeumurHidupStr.checked){ tglStrInput.value = ''; tglStrInput.disabled = true; }
+      else { tglStrInput.disabled = false; }
+    });
+  }
+
+  function wireDocUpload(rowId, fileInputId, linkInputId, fileIdInputId, statusId, toggleId, docType, label){
+    const fileInput = document.getElementById(fileInputId);
+    const linkInput = document.getElementById(linkInputId);
+    const fileIdInput = document.getElementById(fileIdInputId);
+    const toggleBtn = document.getElementById(toggleId);
+    const statusEl = document.getElementById(statusId);
+    if(!fileInput || !linkInput) return;
+
+    function renderRow(){
+      const row = document.getElementById(rowId);
+      const hasLink = !!linkInput.value;
+      row.innerHTML = hasLink ? `
+        <span class="doc-chip">📄 File tersimpan</span>
+        <button type="button" class="btn secondary small" data-act="view">Lihat File</button>
+        <button type="button" class="btn secondary small" data-act="replace">Ganti File</button>
+      ` : `<button type="button" class="btn secondary small" data-act="upload">⬆ ${label}</button>`;
+      const viewBtn = row.querySelector('[data-act="view"]');
+      const replaceBtn = row.querySelector('[data-act="replace"]');
+      const uploadBtn = row.querySelector('[data-act="upload"]');
+      if(viewBtn) viewBtn.addEventListener('click', () => openFilePreviewModal(fileIdInput.value || linkInput.value, linkInput.value));
+      if(replaceBtn) replaceBtn.addEventListener('click', () => fileInput.click());
+      if(uploadBtn) uploadBtn.addEventListener('click', () => fileInput.click());
+    }
+
+    if(toggleBtn){
+      toggleBtn.addEventListener('click', () => {
+        linkInput.style.display = linkInput.style.display === 'none' ? 'block' : 'none';
+      });
+    }
+
+    fileInput.addEventListener('change', async (e) => {
+      const file = e.target.files[0]; e.target.value = '';
+      if(!file) return;
+      if(!SHEETS_API_URL){ alert('Upload otomatis belum aktif.'); return; }
+      if(file.size > SURAT_MAX_SIZE_BYTES){ alert('Ukuran melebihi 10 MB.'); return; }
+      if(statusEl) statusEl.textContent = 'Mengunggah…';
+      try{
+        const base64 = await fileToBase64(file);
+        const result = await uploadFileToDrive(base64, file.name, docType, file.type || 'application/octet-stream');
+        if(result.url){
+          linkInput.value = result.url; fileIdInput.value = result.fileId || '';
+          if(statusEl) statusEl.textContent = '✓ Berhasil diupload.';
+          renderRow();
+        } else {
+          if(statusEl) statusEl.textContent = '';
+          alert(`Gagal: ${result.error || 'tidak diketahui'}`);
+        }
+      }catch(err){ console.error(err); if(statusEl) statusEl.textContent = ''; alert('Gagal mengunggah.'); }
+    });
+
+    renderRow();
+  }
+  wireDocUpload('doc-row-str', 'file-upload-str', 'f-link-str', 'f-fileid-str', 'upload-str-status', 'toggle-manual-str', 'str', 'Upload Scan STR');
+  wireDocUpload('doc-row-sipa', 'file-upload-sipa', 'f-link-sipa', 'f-fileid-sipa', 'upload-sipa-status', 'toggle-manual-sipa', 'sipa', 'Upload Scan SIPA');
+
+  document.getElementById('staff-form').addEventListener('submit', async e => {
+    e.preventDefault();
+    const data = {
+      nama: document.getElementById('f-nama').value.trim(),
+      nip: document.getElementById('f-nip').value.trim(),
+      tempatLahir: document.getElementById('f-tempat').value.trim(),
+      tanggalLahir: document.getElementById('f-tanggal').value,
+      email: document.getElementById('f-email').value.trim(),
+      jenisKelamin: document.getElementById('f-jk').value,
+      pendidikan: document.getElementById('f-pendidikan').value,
+      profesi: document.getElementById('f-profesi').value.trim(),
+      statusPekerjaan: document.getElementById('f-status').value,
+      jabatanSK: document.getElementById('f-jabatan-sk').value.trim(),
+      jabatanRuangan: document.getElementById('f-jabatan-ruangan').value.trim(),
+      keterangan: document.getElementById('f-keterangan').value.trim(),
+      nomorSTR: document.getElementById('f-nomor-str').value.trim(),
+      tglKadaluarsaSTR: document.getElementById('f-str-seumur-hidup').checked ? 'SEUMUR_HIDUP' : document.getElementById('f-tgl-str').value,
+      linkDokumenSTR: document.getElementById('f-link-str').value.trim(),
+      fileIdSTR: document.getElementById('f-fileid-str').value.trim(),
+      nomorSIPA: document.getElementById('f-nomor-sipa').value.trim(),
+      tglKadaluarsaSIPA: document.getElementById('f-tgl-sipa').value,
+      linkDokumenSIPA: document.getElementById('f-link-sipa').value.trim(),
+      fileIdSIPA: document.getElementById('f-fileid-sipa').value.trim()
+    };
+    if(!data.nama){ alert('Nama staf wajib diisi.'); return; }
+    if(editing){
+      const idx = state.staff.findIndex(x => x.id === editing.id);
+      state.staff[idx] = { ...editing, ...data };
+    } else {
+      state.staff.push({ id: uid(), ...data });
+    }
+    closeModal();
+    await saveData();
+    render();
+  });
+}
+
+function renderDeleteModal(){
+  const s = state.staff.find(x => x.id === state.deletingId);
+  const wrap = document.createElement('div');
+  wrap.className = 'overlay';
+  wrap.id = 'overlay';
+  wrap.innerHTML = `
+    <div class="modal" style="max-width:400px;">
+      <button class="close-x" id="modal-close">×</button>
+      <h2>Hapus data staf?</h2>
+      <p class="hint">Data <strong>${escapeHtml(s ? s.nama : '')}</strong> akan dihapus permanen.</p>
+      <div class="modal-actions">
+        <button class="btn secondary" id="delete-cancel">Batal</button>
+        <button class="btn danger" id="delete-confirm" style="background:var(--danger); color:#fff; border-color:var(--danger);">Ya, Hapus</button>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(wrap);
+  document.getElementById('modal-close').addEventListener('click', closeModal);
+  document.getElementById('delete-cancel').addEventListener('click', closeModal);
+  wrap.addEventListener('click', e => { if(e.target.id === 'overlay') closeModal(); });
+  document.getElementById('delete-confirm').addEventListener('click', async () => {
+    state.staff = state.staff.filter(x => x.id !== state.deletingId);
+    closeModal();
+    await saveData();
+    render();
+  });
+}
+
+function closeModal(){
+  const o = document.getElementById('overlay'); if(o) o.remove();
+  state.modal = null; state.editingId = null; state.deletingId = null;
+  render();
+}
+
+(function applyInitialHash(){
+  const hash = location.hash.replace('#','');
+  if(hash && SCREEN_FOR_HASH[hash]) state.screen = SCREEN_FOR_HASH[hash];
+  if(new URLSearchParams(location.search).has('shared')){
+    state.restrictedShare = true;
+    state.restrictedScreen = state.screen;
+  }
+})();
+window.addEventListener('hashchange', () => {
+  if(state.restrictedShare){
+    if(location.hash.replace('#','') !== (HASH_FOR_SCREEN[state.restrictedScreen] || '')) syncUrlHash();
+  }
+});
+loadData();
+</script>
+</body>
+</html>
