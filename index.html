@@ -195,7 +195,6 @@
   .empty-row td{padding:44px 14px;text-align:center;color:var(--ink-soft);}
   .empty-row .big{font-family:'Fraunces',serif;font-size:17px;color:var(--teal);margin-bottom:4px;}
 
-  /* === PERBAIKAN: z-index overlay dinaikkan agar di atas toolbar sticky === */
   .overlay{position:fixed;inset:0;background:rgba(18,45,44,.45);display:flex;align-items:center;justify-content:center;z-index:100;padding:20px;}
   .modal{background:var(--paper);width:100%;max-width:560px;border-radius:14px;padding:26px 28px 24px;box-shadow:0 20px 60px rgba(0,0,0,.25);max-height:90vh;overflow-y:auto;position:relative;}
   .modal h2{font-family:'Fraunces',serif;font-size:22px;margin:0 0 4px;color:var(--teal);}
@@ -355,7 +354,7 @@ let state = {
   suratUploading: false, suratUploadStatus: '',
   suratSearch: '', suratPage: 1,
   restrictedShare: false, restrictedScreen: null,
-  suratFilterBulan: '', suratFilterTahun: '', suratDeletingId: null
+  suratFilterBulan: '', suratFilterTahun: '', suratFilterStatus: '', suratDeletingId: null
 };
 
 function uid(){ return 's_' + Math.random().toString(36).slice(2,10) + Date.now().toString(36); }
@@ -1419,6 +1418,7 @@ function renderInformasiSurat(){
       if(state.suratFilterBulan && bt.bulan !== parseInt(state.suratFilterBulan, 10)) return false;
       if(state.suratFilterTahun && bt.tahun !== parseInt(state.suratFilterTahun, 10)) return false;
     }
+    if(state.suratFilterStatus && (s.keteranganStatus || '') !== state.suratFilterStatus) return false;
     return true;
   }).sort((a, b) => new Date(b.uploadedAt || 0) - new Date(a.uploadedAt || 0));
 
@@ -1454,6 +1454,10 @@ function renderInformasiSurat(){
       <select class="filter" id="surat-filter-tahun">
         <option value="">Semua Tahun</option>
         ${tahunOptions.map(t => `<option value="${t}" ${state.suratFilterTahun == t ? 'selected' : ''}>${t}</option>`).join('')}
+      </select>
+      <select class="filter" id="surat-filter-status">
+        <option value="">Semua Status</option>
+        ${SURAT_STATUS_OPTIONS.map(o => `<option value="${o}" ${state.suratFilterStatus === o ? 'selected' : ''}>${o}</option>`).join('')}
       </select>
       <button class="btn secondary" id="btn-copy-link">🔗 Salin Link</button>
       ${state.isAdmin ? `
@@ -1583,6 +1587,8 @@ function renderInformasiSurat(){
   if(suratFilterBulan) suratFilterBulan.addEventListener('change', e => { state.suratFilterBulan = e.target.value; state.suratPage = 1; render(); });
   const suratFilterTahun = document.getElementById('surat-filter-tahun');
   if(suratFilterTahun) suratFilterTahun.addEventListener('change', e => { state.suratFilterTahun = e.target.value; state.suratPage = 1; render(); });
+  const suratFilterStatus = document.getElementById('surat-filter-status');
+  if(suratFilterStatus) suratFilterStatus.addEventListener('change', e => { state.suratFilterStatus = e.target.value; state.suratPage = 1; render(); });
   const btnCopyLink = document.getElementById('btn-copy-link');
   if(btnCopyLink) btnCopyLink.addEventListener('click', () => copyPageLink(btnCopyLink));
 
