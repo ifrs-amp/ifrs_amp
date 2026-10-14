@@ -116,6 +116,7 @@
   .search::before{content:"⌕";position:absolute;left:11px;top:50%;transform:translateY(-50%);color:var(--ink-soft);font-size:16px;}
   select.filter{padding:9px 10px;border-radius:8px;border:1px solid var(--line);background:var(--paper);font-size:13px;color:var(--ink-soft);max-width:170px;}
   select.filter:focus{outline:none;border-color:var(--teal-2);}
+  select.filter.inline{max-width:150px;font-size:11.5px;padding:6px 8px;}
 
   .table-card{background:var(--paper);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);overflow-x:auto;overflow-y:hidden;}
   table{width:100%;min-width:960px;border-collapse:collapse;font-size:12.8px;table-layout:auto;}
@@ -133,6 +134,9 @@
   .badge.pt{background:#F3ECE6;color:#7A5133;}
   .badge.aktif{background:var(--ok-soft);color:var(--ok);}
   .badge.tidak-aktif{background:var(--danger-soft);color:var(--danger);}
+  .badge.diperpanjang{background:var(--ok-soft);color:var(--ok);}
+  .badge.resign{background:var(--danger-soft);color:var(--danger);}
+  .badge.evaluasi{background:var(--amber-soft);color:#8A5F1E;}
   .badge.cuti-tahunan{background:#EAF0F8;color:#2E5490;}
   .badge.cuti-sakit{background:var(--danger-soft);color:var(--danger);}
   .badge.cuti-melahirkan{background:#EDE7F5;color:#5A3E8C;}
@@ -332,6 +336,7 @@ function openFilePreviewModal(fileIdOrUrl, fallbackUrl){
 
 const PENDIDIKAN_OPTIONS = ["SMA","SMK","D3 Farmasi","S1 Farmasi","S2 Farmasi + Apoteker","S1 Farmasi + Apoteker"];
 const STATUS_OPTIONS = ["PNS","PPPK","PPPK Paruh Waktu","BLUD","PT"];
+const STATUS_KONTRAK_OPTIONS = ["Diperpanjang","Resign","Evaluasi 3 bulan"];
 const PROFESI_CATEGORIES = ["Apoteker","TTK","Umum","Transporter","SKM","Adminkes"];
 const KETERANGAN_CUTI_OPTIONS = ["Cuti Tahunan","Cuti Sakit","Cuti Melahirkan","Cuti Menikah"];
 const SURAT_STATUS_OPTIONS = ["Selesai","Tunda","Revisi","Batal"];
@@ -685,6 +690,12 @@ function keteranganCutiBadgeClass(k){
   if(k === 'Cuti Menikah') return 'cuti-menikah';
   return '';
 }
+function statusKontrakBadgeClass(k){
+  if(k === 'Diperpanjang') return 'diperpanjang';
+  if(k === 'Resign') return 'resign';
+  if(k === 'Evaluasi 3 bulan') return 'evaluasi';
+  return '';
+}
 function suratStatusBadgeClass(k){
   if(k === 'Selesai') return 'aktif';
   if(k === 'Tunda') return 'surat-tunda';
@@ -756,6 +767,11 @@ function normalizeStatusPekerjaan(raw){
   if(!v) return '';
   return STATUS_OPTIONS.find(o => o.toLowerCase() === v.toLowerCase()) || '';
 }
+function normalizeStatusKontrak(raw){
+  const v = (raw || '').toString().trim();
+  if(!v) return '';
+  return STATUS_KONTRAK_OPTIONS.find(o => o.toLowerCase() === v.toLowerCase()) || v;
+}
 function normalizeTanggalLahir(raw){
   const v = (raw || '').toString().trim();
   if(!v) return '';
@@ -798,6 +814,7 @@ function exportToExcel(){
     'Jenis Kelamin': s.jenisKelamin === 'L' ? 'Laki-laki' : s.jenisKelamin === 'P' ? 'Perempuan' : '',
     'Kualifikasi Pendidikan': s.pendidikan || '',
     'Profesi': s.profesi || '', 'Status Pekerjaan': s.statusPekerjaan || '',
+    'Status Kontrak': s.statusKontrak || '',
     'Jabatan Sesuai SK': s.jabatanSK || '', 'Jabatan di Ruangan': s.jabatanRuangan || '',
     'Nomor STR': s.nomorSTR || '',
     'Tanggal Kadaluarsa STR': s.tglKadaluarsaSTR ? formatTanggal(s.tglKadaluarsaSTR) : '',
@@ -817,9 +834,9 @@ function exportToExcel(){
 }
 function downloadTemplate(){
   if(typeof XLSX === 'undefined'){ alert('Modul Excel belum siap.'); return; }
-  const headers = ['Nama Pegawai','NIP','Tanggal Lahir','Jenis Kelamin','Pendidikan','Profesi','Status','Jabatan Sesuai SK','Jabatan Saat Ini','Nomor STR','Nomor SIPA'];
-  const contoh = ['Contoh: Siti Amelia, S.Farm., Apt.','198501012010012001','01/01/1985','Perempuan','S1 Farmasi + Apoteker','Apoteker','PNS','Apoteker Ahli Pertama','Apoteker Ruang Farmasi Rawat Jalan','STR12345678901234','SIPA1234567890'];
-  const catatan = ['CATATAN: Jenis Kelamin diisi Laki-laki / Perempuan','','Format Tanggal Lahir: DD/MM/YYYY','Pendidikan: SMA, SMK, D3 Farmasi, S1 Farmasi, S2 Farmasi + Apoteker, S1 Farmasi + Apoteker','Profesi: Apoteker, TTK, Umum, Transporter, SKM, Adminkes','Status: PNS, PPPK, PPPK Paruh Waktu, BLUD, PT','','','','',''];
+  const headers = ['Nama Pegawai','NIP','Tanggal Lahir','Jenis Kelamin','Pendidikan','Profesi','Status','Status Kontrak','Jabatan Sesuai SK','Jabatan Saat Ini','Nomor STR','Nomor SIPA'];
+  const contoh = ['Contoh: Siti Amelia, S.Farm., Apt.','198501012010012001','01/01/1985','Perempuan','S1 Farmasi + Apoteker','Apoteker','PNS','Diperpanjang','Apoteker Ahli Pertama','Apoteker Ruang Farmasi Rawat Jalan','STR12345678901234','SIPA1234567890'];
+  const catatan = ['CATATAN: Jenis Kelamin diisi Laki-laki / Perempuan','','Format Tanggal Lahir: DD/MM/YYYY','Pendidikan: SMA, SMK, D3 Farmasi, S1 Farmasi, S2 Farmasi + Apoteker, S1 Farmasi + Apoteker','Profesi: Apoteker, TTK, Umum, Transporter, SKM, Adminkes','Status: PNS, PPPK, PPPK Paruh Waktu, BLUD, PT','Status Kontrak: Diperpanjang, Resign, Evaluasi 3 bulan','','','','',''];
   const ws = XLSX.utils.aoa_to_sheet([headers, contoh, catatan]);
   ws['!cols'] = headers.map(h => ({ wch: Math.max(24, h.length + 4) }));
   const wb = XLSX.utils.book_new();
@@ -850,6 +867,7 @@ function handleImportFile(e){
           pendidikan: normalizePendidikan(row['Pendidikan']),
           profesi: (row['Profesi'] || '').toString().trim(),
           statusPekerjaan: normalizeStatusPekerjaan(row['Status']),
+          statusKontrak: normalizeStatusKontrak(row['Status Kontrak']),
           jabatanSK: (row['Jabatan Sesuai SK'] || '').toString().trim(),
           jabatanRuangan: (row['Jabatan Saat Ini'] || '').toString().trim(),
           keterangan: '',
@@ -1067,7 +1085,9 @@ function renderDashboard(){
       <table>
         <thead>
           <tr>
-            <th>Nama</th><th>Jenis kelamin</th><th>Pendidikan</th><th>Status</th>
+            <th>Nama</th>
+            <th>Status Kontrak</th>
+            <th>Jenis kelamin</th><th>Pendidikan</th><th>Status</th>
             <th>STR</th><th>SIPA</th><th>Jabatan ruangan</th><th>Keterangan</th>
             ${state.isAdmin ? '<th></th>' : ''}
           </tr>
@@ -1075,7 +1095,7 @@ function renderDashboard(){
         <tbody>
           ${filtered.length === 0 ? `
             <tr class="empty-row">
-              <td colspan="${state.isAdmin ? 9 : 8}">
+              <td colspan="${state.isAdmin ? 10 : 9}">
                 <div class="big">${state.staff.length === 0 ? 'Belum ada data staf' : 'Tidak ada hasil'}</div>
                 <div>${state.staff.length === 0
                   ? (state.isAdmin ? 'Klik "Tambah Staf" untuk mulai.' : 'Data akan muncul setelah admin menambahkannya.')
@@ -1086,6 +1106,16 @@ function renderDashboard(){
               <td>
                 <div class="nama-cell">${escapeHtml(s.nama)}</div>
                 ${s.nip ? `<div class="sub">NIP ${escapeHtml(s.nip)}</div>` : ''}
+              </td>
+              <td>
+                ${state.isAdmin ? `
+                  <select class="filter inline" data-status-kontrak="${s.id}">
+                    <option value="">Pilih…</option>
+                    ${STATUS_KONTRAK_OPTIONS.map(o => `<option value="${o}" ${s.statusKontrak===o?'selected':''}>${o}</option>`).join('')}
+                  </select>
+                ` : (s.statusKontrak
+                  ? `<span class="badge ${statusKontrakBadgeClass(s.statusKontrak)}">${escapeHtml(s.statusKontrak)}</span>`
+                  : '<span class="sub">—</span>')}
               </td>
               <td>${s.jenisKelamin === 'L' ? 'Laki-laki' : s.jenisKelamin === 'P' ? 'Perempuan' : '—'}</td>
               <td>${escapeHtml(s.pendidikan)}</td>
@@ -1126,6 +1156,16 @@ function renderDashboard(){
   if(fStatus) fStatus.addEventListener('change', e => { state.filterStatus = e.target.value; render(); });
   const fPend = document.getElementById('filter-pendidikan');
   if(fPend) fPend.addEventListener('change', e => { state.filterPendidikan = e.target.value; render(); });
+
+  document.querySelectorAll('[data-status-kontrak]').forEach(sel => {
+    sel.addEventListener('change', async () => {
+      const entry = state.staff.find(x => x.id === sel.getAttribute('data-status-kontrak'));
+      if(entry){
+        entry.statusKontrak = sel.value;
+        await saveData();
+      }
+    });
+  });
 
   const totalCard = document.querySelector('[data-stat-total]');
   if(totalCard) totalCard.addEventListener('click', () => { state.filterStatus = ''; state.filterPendidikan = ''; state.filterProfesi = ''; render(); });
@@ -2050,7 +2090,7 @@ function renderLoginModal(){
 
 function renderFormModal(){
   const editing = state.editingId ? state.staff.find(s => s.id === state.editingId) : null;
-  const s = editing || { nama:'', nip:'', tempatLahir:'', tanggalLahir:'', email:'', jenisKelamin:'', pendidikan:'', profesi:'', statusPekerjaan:'', jabatanSK:'', jabatanRuangan:'', keterangan:'', nomorSTR:'', tglKadaluarsaSTR:'', linkDokumenSTR:'', fileIdSTR:'', nomorSIPA:'', tglKadaluarsaSIPA:'', linkDokumenSIPA:'', fileIdSIPA:'' };
+  const s = editing || { nama:'', nip:'', tempatLahir:'', tanggalLahir:'', email:'', jenisKelamin:'', pendidikan:'', profesi:'', statusPekerjaan:'', statusKontrak:'', jabatanSK:'', jabatanRuangan:'', keterangan:'', nomorSTR:'', tglKadaluarsaSTR:'', linkDokumenSTR:'', fileIdSTR:'', nomorSIPA:'', tglKadaluarsaSIPA:'', linkDokumenSIPA:'', fileIdSIPA:'' };
   const wrap = document.createElement('div');
   wrap.className = 'overlay';
   wrap.id = 'overlay';
@@ -2090,6 +2130,12 @@ function renderFormModal(){
             <select id="f-status">
               <option value="">Pilih…</option>
               ${STATUS_OPTIONS.map(o => `<option value="${escapeHtml(o)}" ${s.statusPekerjaan===o?'selected':''}>${o}</option>`).join('')}
+            </select>
+          </div>
+          <div class="field"><label>Status Kontrak <span class="opt-tag">(Opsional)</span></label>
+            <select id="f-status-kontrak">
+              <option value="">Pilih…</option>
+              ${STATUS_KONTRAK_OPTIONS.map(o => `<option value="${escapeHtml(o)}" ${s.statusKontrak===o?'selected':''}>${o}</option>`).join('')}
             </select>
           </div>
         </div>
@@ -2227,6 +2273,7 @@ function renderFormModal(){
       pendidikan: document.getElementById('f-pendidikan').value,
       profesi: document.getElementById('f-profesi').value.trim(),
       statusPekerjaan: document.getElementById('f-status').value,
+      statusKontrak: document.getElementById('f-status-kontrak').value,
       jabatanSK: document.getElementById('f-jabatan-sk').value.trim(),
       jabatanRuangan: document.getElementById('f-jabatan-ruangan').value.trim(),
       keterangan: document.getElementById('f-keterangan').value.trim(),
