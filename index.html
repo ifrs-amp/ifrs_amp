@@ -124,6 +124,8 @@
   tbody td{padding:10px 10px;border-bottom:1px solid var(--line);vertical-align:top;}
   tbody tr:last-child td{border-bottom:none;}
   tbody tr:hover{background:#FAFBFA;}
+  tbody tr.inactive-row{opacity:.55;}
+  tbody tr.inactive-row:hover{opacity:.85;}
   .nama-cell{font-family:'Fraunces',serif;font-weight:600;color:var(--teal);font-size:14.5px;}
   .sub{color:var(--ink-soft);font-size:12px;margin-top:2px;}
   .badge{display:inline-block;padding:3px 9px;border-radius:999px;font-size:11.5px;font-weight:600;white-space:nowrap;}
@@ -137,6 +139,7 @@
   .badge.diperpanjang{background:var(--ok-soft);color:var(--ok);}
   .badge.resign{background:var(--danger-soft);color:var(--danger);}
   .badge.evaluasi{background:var(--amber-soft);color:#8A5F1E;}
+  .badge.tidak-diperpanjang{background:#E4E8E7;color:#4B615F;}
   .badge.cuti-tahunan{background:#EAF0F8;color:#2E5490;}
   .badge.cuti-sakit{background:var(--danger-soft);color:var(--danger);}
   .badge.cuti-melahirkan{background:#EDE7F5;color:#5A3E8C;}
@@ -336,7 +339,8 @@ function openFilePreviewModal(fileIdOrUrl, fallbackUrl){
 
 const PENDIDIKAN_OPTIONS = ["SMA","SMK","D3 Farmasi","S1 Farmasi","S2 Farmasi + Apoteker","S1 Farmasi + Apoteker"];
 const STATUS_OPTIONS = ["PNS","PPPK","PPPK Paruh Waktu","BLUD","PT"];
-const STATUS_KONTRAK_OPTIONS = ["Diperpanjang","Resign","Evaluasi 3 bulan"];
+const STATUS_KONTRAK_OPTIONS = ["Diperpanjang","Resign","Evaluasi 3 bulan","Tidak Diperpanjang"];
+const STATUS_KONTRAK_INACTIVE = ["Resign","Tidak Diperpanjang"];
 const PROFESI_CATEGORIES = ["Apoteker","TTK","Umum","Transporter","SKM","Adminkes"];
 const KETERANGAN_CUTI_OPTIONS = ["Cuti Tahunan","Cuti Sakit","Cuti Melahirkan","Cuti Menikah"];
 const SURAT_STATUS_OPTIONS = ["Selesai","Tunda","Revisi","Batal"];
@@ -363,6 +367,11 @@ let state = {
 };
 
 function uid(){ return 's_' + Math.random().toString(36).slice(2,10) + Date.now().toString(36); }
+
+function isActiveStaff(s){
+  const k = (s.statusKontrak || '').trim();
+  return !STATUS_KONTRAK_INACTIVE.includes(k);
+}
 
 const REMINDER_THRESHOLD_DAYS = 90;
 function daysUntil(dateStr){
@@ -694,6 +703,7 @@ function statusKontrakBadgeClass(k){
   if(k === 'Diperpanjang') return 'diperpanjang';
   if(k === 'Resign') return 'resign';
   if(k === 'Evaluasi 3 bulan') return 'evaluasi';
+  if(k === 'Tidak Diperpanjang') return 'tidak-diperpanjang';
   return '';
 }
 function suratStatusBadgeClass(k){
@@ -836,7 +846,7 @@ function downloadTemplate(){
   if(typeof XLSX === 'undefined'){ alert('Modul Excel belum siap.'); return; }
   const headers = ['Nama Pegawai','NIP','Tanggal Lahir','Jenis Kelamin','Pendidikan','Profesi','Status','Status Kontrak','Jabatan Sesuai SK','Jabatan Saat Ini','Nomor STR','Nomor SIPA'];
   const contoh = ['Contoh: Siti Amelia, S.Farm., Apt.','198501012010012001','01/01/1985','Perempuan','S1 Farmasi + Apoteker','Apoteker','PNS','Diperpanjang','Apoteker Ahli Pertama','Apoteker Ruang Farmasi Rawat Jalan','STR12345678901234','SIPA1234567890'];
-  const catatan = ['CATATAN: Jenis Kelamin diisi Laki-laki / Perempuan','','Format Tanggal Lahir: DD/MM/YYYY','Pendidikan: SMA, SMK, D3 Farmasi, S1 Farmasi, S2 Farmasi + Apoteker, S1 Farmasi + Apoteker','Profesi: Apoteker, TTK, Umum, Transporter, SKM, Adminkes','Status: PNS, PPPK, PPPK Paruh Waktu, BLUD, PT','Status Kontrak: Diperpanjang, Resign, Evaluasi 3 bulan','','','','',''];
+  const catatan = ['CATATAN: Jenis Kelamin diisi Laki-laki / Perempuan','','Format Tanggal Lahir: DD/MM/YYYY','Pendidikan: SMA, SMK, D3 Farmasi, S1 Farmasi, S2 Farmasi + Apoteker, S1 Farmasi + Apoteker','Profesi: Apoteker, TTK, Umum, Transporter, SKM, Adminkes','Status: PNS, PPPK, PPPK Paruh Waktu, BLUD, PT','Status Kontrak: Diperpanjang, Resign, Evaluasi 3 bulan, Tidak Diperpanjang','','','','',''];
   const ws = XLSX.utils.aoa_to_sheet([headers, contoh, catatan]);
   ws['!cols'] = headers.map(h => ({ wch: Math.max(24, h.length + 4) }));
   const wb = XLSX.utils.book_new();
@@ -981,15 +991,16 @@ function getFiltered(){
   }).sort((a,b) => (a.nama||'').localeCompare(b.nama||''));
 }
 function computeStats(){
-  const total = state.staff.length;
+  const activeStaff = state.staff.filter(isActiveStaff);
+  const total = activeStaff.length;
   const byStatus = {};
   STATUS_OPTIONS.forEach(s => byStatus[s] = 0);
-  state.staff.forEach(s => { if(byStatus[s.statusPekerjaan] !== undefined) byStatus[s.statusPekerjaan]++; });
-  const perempuan = state.staff.filter(s => s.jenisKelamin === 'P').length;
-  const lakiLaki = state.staff.filter(s => s.jenisKelamin === 'L').length;
+  activeStaff.forEach(s => { if(byStatus[s.statusPekerjaan] !== undefined) byStatus[s.statusPekerjaan]++; });
+  const perempuan = activeStaff.filter(s => s.jenisKelamin === 'P').length;
+  const lakiLaki = activeStaff.filter(s => s.jenisKelamin === 'L').length;
   const byProfesi = {};
   PROFESI_CATEGORIES.forEach(p => byProfesi[p] = 0);
-  state.staff.forEach(s => {
+  activeStaff.forEach(s => {
     if((s.pendidikan || '').trim().toLowerCase() === 's2 farmasi + apoteker'){ byProfesi['Apoteker']++; return; }
     const p = (s.profesi || '').trim();
     const matched = PROFESI_CATEGORIES.find(c => c.toLowerCase() === p.toLowerCase());
@@ -1004,6 +1015,7 @@ function renderDashboard(){
   const filtered = getFiltered();
   const reminders = getExpiryReminders();
   const hasExpired = reminders.some(r => r.sisaHari < 0);
+  const inactiveCount = state.staff.filter(s => !isActiveStaff(s)).length;
 
   const reminderHtml = reminders.length === 0 ? '' : `
     <div class="reminder-card ${hasExpired ? '' : 'warn'}">
@@ -1047,7 +1059,7 @@ function renderDashboard(){
     ${reminderHtml}
 
     <div class="stats">
-      <div class="stat clickable ${(!state.filterStatus && !state.filterPendidikan && !state.filterProfesi) ? 'active':''}" data-stat-total="1"><div class="num">${stats.total}</div><div class="label">Total staf</div></div>
+      <div class="stat clickable ${(!state.filterStatus && !state.filterPendidikan && !state.filterProfesi) ? 'active':''}" data-stat-total="1"><div class="num">${stats.total}</div><div class="label">Total staf aktif</div></div>
       <div class="stat clickable ${state.filterStatus==='PNS' ? 'active':''}" data-stat-status="PNS"><div class="num">${stats.byStatus['PNS']}</div><div class="label">PNS</div></div>
       <div class="stat clickable ${state.filterStatus==='PPPK' ? 'active':''}" data-stat-status="PPPK"><div class="num">${stats.byStatus['PPPK']}</div><div class="label">PPPK</div></div>
       <div class="stat clickable ${state.filterStatus==='PPPK Paruh Waktu' ? 'active':''}" data-stat-status="PPPK Paruh Waktu"><div class="num">${stats.byStatus['PPPK Paruh Waktu']}</div><div class="label">PPPK Paruh Waktu</div></div>
@@ -1055,7 +1067,7 @@ function renderDashboard(){
       <div class="stat clickable ${state.filterStatus==='PT' ? 'active':''}" data-stat-status="PT"><div class="num">${stats.byStatus['PT']}</div><div class="label">PT</div></div>
     </div>
 
-    <p class="section-label">Pengelompokan Profesi</p>
+    <p class="section-label">Pengelompokan Profesi (Staf Aktif)</p>
     <div class="stats">
       ${PROFESI_CATEGORIES.map(cat => `
         <div class="stat clickable ${state.filterProfesi===cat ? 'active':''}" data-stat-profesi="${escapeHtml(cat)}"><div class="num">${stats.byProfesi[cat]}</div><div class="label">${escapeHtml(cat)}</div></div>
@@ -1102,7 +1114,7 @@ function renderDashboard(){
                   : 'Coba ubah kata kunci atau filter.'}</div>
               </td>
             </tr>` : filtered.map(s => `
-            <tr>
+            <tr class="${isActiveStaff(s) ? '' : 'inactive-row'}">
               <td>
                 <div class="nama-cell">${escapeHtml(s.nama)}</div>
                 ${s.nip ? `<div class="sub">NIP ${escapeHtml(s.nip)}</div>` : ''}
@@ -1137,7 +1149,7 @@ function renderDashboard(){
       </table>
     </div>
 
-    <p class="footnote">Menampilkan ${filtered.length} dari ${state.staff.length} staf. ${state.isAdmin ? 'Perubahan tersimpan otomatis.' : 'Hanya super admin yang dapat mengubah data.'}</p>
+    <p class="footnote">Menampilkan ${filtered.length} dari ${state.staff.length} staf. ${inactiveCount > 0 ? `<strong>${inactiveCount} staf</strong> dengan status <em>Resign</em> / <em>Tidak Diperpanjang</em> tidak dihitung dalam statistik di atas. ` : ''}${state.isAdmin ? 'Perubahan tersimpan otomatis.' : 'Hanya super admin yang dapat mengubah data.'}</p>
   `;
 
   const btnHome = document.getElementById('btn-home');
@@ -1163,6 +1175,7 @@ function renderDashboard(){
       if(entry){
         entry.statusKontrak = sel.value;
         await saveData();
+        render();
       }
     });
   });
