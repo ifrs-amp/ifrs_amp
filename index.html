@@ -348,11 +348,13 @@ const SHIFT_OPTIONS = ["Shift","Non Shift","Cuti Melahirkan"];
 const DISETUJUI_OPTIONS = ["Kepala Instalasi Farmasi","Koordinator Ruangan"];
 const BULAN_NAMES = ["Januari","Februari","Maret","April","Mei","Juni","Juli","Agustus","September","Oktober","November","Desember"];
 const SURAT_PER_PAGE = 10;
+const STAFF_PER_PAGE = 6; // <--- BATAS STAF PER HALAMAN
 
 let state = {
   loading: true, screen: 'landing',
   staff: [], isAdmin: false,
   search: "", filterStatus: "", filterPendidikan: "", filterProfesi: "",
+  staffPage: 1,
   farmasiMenuOpen: false, modal: null,
   editingId: null, deletingId: null, loginError: "",
   cutiStaf: [], cutiMonth: new Date().getMonth() + 1, cutiYear: new Date().getFullYear(),
@@ -1025,6 +1027,14 @@ function renderDashboard(){
   const app = document.getElementById('app');
   const stats = computeStats();
   const filtered = getFiltered();
+  
+  // === PAGINATION STAF LOGIC ===
+  const totalPages = Math.max(1, Math.ceil(filtered.length / STAFF_PER_PAGE));
+  if(state.staffPage > totalPages) state.staffPage = totalPages;
+  const startIdx = (state.staffPage - 1) * STAFF_PER_PAGE;
+  const pageRows = filtered.slice(startIdx, startIdx + STAFF_PER_PAGE);
+  // ============================
+
   const reminders = getExpiryReminders();
   const hasExpired = reminders.some(r => r.sisaHari < 0);
   const inactiveCount = state.staff.filter(s => !isActiveStaff(s)).length;
@@ -1125,7 +1135,7 @@ function renderDashboard(){
                   ? (state.isAdmin ? 'Klik "Tambah Staf" untuk mulai.' : 'Data akan muncul setelah admin menambahkannya.')
                   : 'Coba ubah kata kunci atau filter.'}</div>
               </td>
-            </tr>` : filtered.map(s => `
+            </tr>` : pageRows.map(s => `
             <tr class="${isActiveStaff(s) ? '' : 'inactive-row'}">
               <td>
                 <div class="nama-cell">${escapeHtml(s.nama)}</div>
@@ -1161,6 +1171,12 @@ function renderDashboard(){
       </table>
     </div>
 
+    <div class="pagination">
+      <button id="staff-page-prev" ${state.staffPage <= 1 ? 'disabled' : ''}>← Sebelumnya</button>
+      <span class="page-info">Halaman <strong>${state.staffPage}</strong> dari <strong>${totalPages}</strong> · ${filtered.length} staf</span>
+      <button id="staff-page-next" ${state.staffPage >= totalPages ? 'disabled' : ''}>Selanjutnya →</button>
+    </div>
+
     <p class="footnote">Menampilkan ${filtered.length} dari ${state.staff.length} staf. ${inactiveCount > 0 ? `<strong>${inactiveCount} staf</strong> dengan status <em>Resign</em> / <em>Tidak Diperpanjang</em> tidak dihitung dalam statistik di atas. ` : ''}${state.isAdmin ? 'Perubahan tersimpan otomatis.' : 'Hanya super admin yang dapat mengubah data.'}</p>
   `;
 
@@ -1171,15 +1187,21 @@ function renderDashboard(){
     searchInput.addEventListener('input', e => {
       const pos = e.target.selectionStart;
       state.search = e.target.value;
+      state.staffPage = 1;
       render();
       const el = document.getElementById('search-input');
       if(el){ el.focus(); try{ el.setSelectionRange(pos, pos); }catch(e){} }
     });
   }
   const fStatus = document.getElementById('filter-status');
-  if(fStatus) fStatus.addEventListener('change', e => { state.filterStatus = e.target.value; render(); });
+  if(fStatus) fStatus.addEventListener('change', e => { state.filterStatus = e.target.value; state.staffPage = 1; render(); });
   const fPend = document.getElementById('filter-pendidikan');
-  if(fPend) fPend.addEventListener('change', e => { state.filterPendidikan = e.target.value; render(); });
+  if(fPend) fPend.addEventListener('change', e => { state.filterPendidikan = e.target.value; state.staffPage = 1; render(); });
+
+  const btnPrev = document.getElementById('staff-page-prev');
+  if(btnPrev) btnPrev.addEventListener('click', () => { state.staffPage--; render(); window.scrollTo({top: 0, behavior: 'smooth'}); });
+  const btnNext = document.getElementById('staff-page-next');
+  if(btnNext) btnNext.addEventListener('click', () => { state.staffPage++; render(); window.scrollTo({top: 0, behavior: 'smooth'}); });
 
   document.querySelectorAll('[data-status-kontrak]').forEach(sel => {
     sel.addEventListener('change', async () => {
@@ -1193,17 +1215,21 @@ function renderDashboard(){
   });
 
   const totalCard = document.querySelector('[data-stat-total]');
-  if(totalCard) totalCard.addEventListener('click', () => { state.filterStatus = ''; state.filterPendidikan = ''; state.filterProfesi = ''; render(); });
+  if(totalCard) totalCard.addEventListener('click', () => { state.filterStatus = ''; state.filterPendidikan = ''; state.filterProfesi = ''; state.staffPage = 1; render(); });
   document.querySelectorAll('[data-stat-status]').forEach(card => {
     card.addEventListener('click', () => {
       const val = card.getAttribute('data-stat-status');
-      state.filterStatus = (state.filterStatus === val) ? '' : val; render();
+      state.filterStatus = (state.filterStatus === val) ? '' : val;
+      state.staffPage = 1;
+      render();
     });
   });
   document.querySelectorAll('[data-stat-profesi]').forEach(card => {
     card.addEventListener('click', () => {
       const val = card.getAttribute('data-stat-profesi');
-      state.filterProfesi = (state.filterProfesi === val) ? '' : val; render();
+      state.filterProfesi = (state.filterProfesi === val) ? '' : val;
+      state.staffPage = 1;
+      render();
     });
   });
 
