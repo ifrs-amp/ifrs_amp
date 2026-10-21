@@ -373,7 +373,6 @@ function isActiveStaff(s){
   return !STATUS_KONTRAK_INACTIVE.includes(k);
 }
 
-// SET KE 60 HARI (2 BULAN)
 const REMINDER_THRESHOLD_DAYS = 60; 
 
 function daysUntil(dateStr){
@@ -386,7 +385,7 @@ function daysUntil(dateStr){
 function getExpiryReminders(){
   const items = [];
   state.staff.forEach(s => {
-    if(!isActiveStaff(s)) return; // Hanya staf aktif yg diingatkan
+    if(!isActiveStaff(s)) return; 
     if(s.tglKadaluarsaSTR){
       const d = daysUntil(s.tglKadaluarsaSTR);
       if(d !== null && d <= REMINDER_THRESHOLD_DAYS) items.push({ nama:s.nama, jenis:'STR', nomor:s.nomorSTR, tanggal:s.tglKadaluarsaSTR, sisaHari:d, link:s.linkDokumenSTR });
@@ -753,7 +752,6 @@ function docStatus(expiryDate){
   return d < 0 ? 'tidak-aktif' : 'aktif';
 }
 
-// FUNGSI BARU UNTUK MENAMPILKAN TOMBOL FILE
 function renderDocCell(nomor, expiryDate, link, fileId){
   if(!nomor && !expiryDate && !link) return '<span class="sub">—</span>';
   const isSeumurHidup = expiryDate === 'SEUMUR_HIDUP';
@@ -764,7 +762,7 @@ function renderDocCell(nomor, expiryDate, link, fileId){
   if(link || fileId){
       const safeLink = escapeHtml(link || '');
       const safeFileId = escapeHtml(fileId || '');
-      fileLinkHtml = `<button class="btn secondary small" style="padding:4px 8px;font-size:11px;margin-top:6px;border-color:#DCE3E1;" onclick="event.stopPropagation(); openFilePreviewModal('${safeFileId || safeLink}', '${safeLink}')">👁 Lihat Dokumen</button>`;
+      fileLinkHtml = `<div style="margin-top:6px;"><button class="btn secondary small" style="padding:4px 8px;font-size:11px;border-color:#DCE3E1;background:#fff;display:inline-flex;align-items:center;gap:4px;" onclick="event.stopPropagation(); openFilePreviewModal('${safeFileId || safeLink}', '${safeLink}')">👁 Lihat Dokumen</button></div>`;
   }
 
   return `
@@ -2188,7 +2186,7 @@ function renderFormModal(){
         <div class="field">
           <label>Scan STR <span class="opt-tag">(Opsional)</span></label>
           <div class="doc-box">
-            <div id="doc-row-str"></div>
+            <div id="doc-row-str" class="doc-row"></div>
             <div class="sub" id="upload-str-status"></div>
             <button type="button" class="link-manual-toggle" id="toggle-manual-str">atau tempel link manual</button>
             <input type="url" id="f-link-str" value="${escapeHtml(s.linkDokumenSTR)}" placeholder="https://drive.google.com/…" style="display:none; margin-top:6px;">
@@ -2203,7 +2201,7 @@ function renderFormModal(){
         <div class="field">
           <label>Scan SIPA <span class="opt-tag">(Opsional)</span></label>
           <div class="doc-box">
-            <div id="doc-row-sipa"></div>
+            <div id="doc-row-sipa" class="doc-row"></div>
             <div class="sub" id="upload-sipa-status"></div>
             <button type="button" class="link-manual-toggle" id="toggle-manual-sipa">atau tempel link manual</button>
             <input type="url" id="f-link-sipa" value="${escapeHtml(s.linkDokumenSIPA)}" placeholder="https://drive.google.com/…" style="display:none; margin-top:6px;">
