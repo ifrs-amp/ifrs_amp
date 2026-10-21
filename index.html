@@ -373,7 +373,9 @@ function isActiveStaff(s){
   return !STATUS_KONTRAK_INACTIVE.includes(k);
 }
 
-const REMINDER_THRESHOLD_DAYS = 90;
+// SET KE 60 HARI (2 BULAN)
+const REMINDER_THRESHOLD_DAYS = 60; 
+
 function daysUntil(dateStr){
   if(!dateStr) return null;
   const today = new Date(); today.setHours(0,0,0,0);
@@ -384,6 +386,7 @@ function daysUntil(dateStr){
 function getExpiryReminders(){
   const items = [];
   state.staff.forEach(s => {
+    if(!isActiveStaff(s)) return; // Hanya staf aktif yg diingatkan
     if(s.tglKadaluarsaSTR){
       const d = daysUntil(s.tglKadaluarsaSTR);
       if(d !== null && d <= REMINDER_THRESHOLD_DAYS) items.push({ nama:s.nama, jenis:'STR', nomor:s.nomorSTR, tanggal:s.tglKadaluarsaSTR, sisaHari:d, link:s.linkDokumenSTR });
@@ -749,15 +752,26 @@ function docStatus(expiryDate){
   if(d === null) return null;
   return d < 0 ? 'tidak-aktif' : 'aktif';
 }
-function renderDocCell(nomor, expiryDate){
-  if(!nomor && !expiryDate) return '<span class="sub">—</span>';
+
+// FUNGSI BARU UNTUK MENAMPILKAN TOMBOL FILE
+function renderDocCell(nomor, expiryDate, link, fileId){
+  if(!nomor && !expiryDate && !link) return '<span class="sub">—</span>';
   const isSeumurHidup = expiryDate === 'SEUMUR_HIDUP';
   const status = docStatus(expiryDate);
   const badge = status === 'aktif' ? '<span class="badge aktif">Aktif</span>' : status === 'tidak-aktif' ? '<span class="badge tidak-aktif">Tidak Aktif</span>' : '';
+  
+  let fileLinkHtml = '';
+  if(link || fileId){
+      const safeLink = escapeHtml(link || '');
+      const safeFileId = escapeHtml(fileId || '');
+      fileLinkHtml = `<button class="btn secondary small" style="padding:4px 8px;font-size:11px;margin-top:6px;border-color:#DCE3E1;" onclick="event.stopPropagation(); openFilePreviewModal('${safeFileId || safeLink}', '${safeLink}')">👁 Lihat Dokumen</button>`;
+  }
+
   return `
-    ${nomor ? `<div>${escapeHtml(nomor)}</div>` : '<div class="sub">Nomor belum diisi</div>'}
+    ${nomor ? `<div>${escapeHtml(nomor)}</div>` : (isSeumurHidup || expiryDate || link ? '' : '<div class="sub">Nomor belum diisi</div>')}
     ${isSeumurHidup ? '<div class="sub">Seumur Hidup</div>' : (expiryDate ? `<div class="sub">s.d. ${formatTanggal(expiryDate)}</div>` : '')}
     ${badge ? `<div style="margin-top:3px;">${badge}</div>` : ''}
+    ${fileLinkHtml}
   `;
 }
 
@@ -1023,13 +1037,13 @@ function renderDashboard(){
         <p class="reminder-title ${hasExpired ? '' : 'warn'}">🔔 Pengingat Kadaluarsa STR / SIPA</p>
         <span class="sub">${reminders.length} item</span>
       </div>
-      <p class="reminder-sub">STR &amp; SIPA yang sudah lewat atau akan kadaluarsa dalam ${REMINDER_THRESHOLD_DAYS} hari.</p>
+      <p class="reminder-sub">Dokumen yang sudah lewat atau akan kadaluarsa dalam ${REMINDER_THRESHOLD_DAYS} hari (2 bulan) ke depan.</p>
       <div class="reminder-list">
         ${reminders.map(r => `
           <div class="reminder-item">
             <div>
               <span class="who">${escapeHtml(r.nama)}</span>
-              <span class="doc"> — ${r.jenis}${r.nomor ? ' ' + escapeHtml(r.nomor) : ''} · ${formatTanggal(r.tanggal)}${r.link ? ` · <a href="${escapeHtml(r.link)}" target="_blank" rel="noopener" style="color:var(--teal-2);">lihat</a>` : ''}</span>
+              <span class="doc"> — ${r.jenis}${r.nomor ? ' ' + escapeHtml(r.nomor) : ''} · ${formatTanggal(r.tanggal)}</span>
             </div>
             <span class="reminder-status ${r.sisaHari < 0 ? 'expired' : 'soon'}">
               ${r.sisaHari < 0 ? `Lewat ${Math.abs(r.sisaHari)} hari` : (r.sisaHari === 0 ? 'Hari ini' : `${r.sisaHari} hari lagi`)}
@@ -1132,8 +1146,8 @@ function renderDashboard(){
               <td>${s.jenisKelamin === 'L' ? 'Laki-laki' : s.jenisKelamin === 'P' ? 'Perempuan' : '—'}</td>
               <td>${escapeHtml(s.pendidikan)}</td>
               <td><span class="badge ${statusBadgeClass(s.statusPekerjaan)}">${escapeHtml(s.statusPekerjaan)}</span></td>
-              <td>${renderDocCell(s.nomorSTR, s.tglKadaluarsaSTR)}</td>
-              <td>${renderDocCell(s.nomorSIPA, s.tglKadaluarsaSIPA)}</td>
+              <td>${renderDocCell(s.nomorSTR, s.tglKadaluarsaSTR, s.linkDokumenSTR, s.fileIdSTR)}</td>
+              <td>${renderDocCell(s.nomorSIPA, s.tglKadaluarsaSIPA, s.linkDokumenSIPA, s.fileIdSIPA)}</td>
               <td>${escapeHtml(s.jabatanRuangan)}</td>
               <td>${escapeHtml(s.keterangan) || '<span class="sub">—</span>'}</td>
               ${state.isAdmin ? `
