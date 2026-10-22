@@ -1424,7 +1424,14 @@ function computeRekapCuti(year){
     map[key].total += days; map[key].pengajuan++;
     if(map[key].breakdown[entry.keterangan] !== undefined) map[key].breakdown[entry.keterangan] += days;
   });
-  return Object.values(map).sort((a,b) => (a.namaPetugas||'').localeCompare(b.namaPetugas||''));
+  
+  // Mengurutkan berdasarkan Total Hari Cuti terbanyak (Descending)
+  return Object.values(map).sort((a,b) => {
+    if (b.total !== a.total) {
+      return b.total - a.total;
+    }
+    return (a.namaPetugas||'').localeCompare(b.namaPetugas||'');
+  });
 }
 
 function renderRekapCuti(){
