@@ -237,7 +237,6 @@
     .toolbar{margin:0 -16px 16px;padding:12px 16px;}
   }
 </style>
-<!-- Tesseract dihapus dari sini agar loading awal super cepat -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js" defer></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js" defer></script>
 </head>
@@ -305,6 +304,20 @@ async function uploadFileToDrive(base64, fileName, docType, mimeType){
   }catch(e){
     console.error('Gagal upload ke Google Drive', e);
     return { url:null, fileId:null, error: e.message || String(e) };
+  }
+}
+
+// FUNGSI BARU: HAPUS FILE DARI DRIVE
+async function deleteFileFromDrive(fileId){
+  if(!SHEETS_API_URL || !fileId) return;
+  try {
+    await fetch(SHEETS_API_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify({ action: 'deleteFile', fileId: fileId })
+    });
+  } catch(e) {
+    console.error('Gagal hapus file dari Drive', e);
   }
 }
 
@@ -401,7 +414,6 @@ function getExpiryReminders(){
   return items;
 }
 
-// PERBAIKAN: Ambil data secara paralel (Promise.all) agar load sangat cepat
 async function loadData(){
   try {
     const [staff, cuti, liburRows, surat] = await Promise.all([
@@ -625,7 +637,6 @@ function waitForLib(checkFn, timeoutMs){
   });
 }
 
-// Tesseract dimuat secara dinamis saat upload surat scan
 async function loadTesseract(){
   if(typeof Tesseract !== 'undefined') return;
   return new Promise((resolve, reject) => {
@@ -661,7 +672,6 @@ async function handleSuratFileSelected(file){
 
   const foundNothing = !fields.tanggalSurat && !fields.hal && !fields.nomorSurat;
   
-  // Jika tidak ada teks, muat Tesseract (OCR) secara dinamis
   if(pdfReady && foundNothing){
     state.suratUploadStatus = 'Memuat modul OCR…'; render();
     try {
@@ -1638,6 +1648,7 @@ function renderInformasiSurat(){
                   ${s.linkFileAsli ? `<button class="btn secondary small" data-preview-asli="${s.id}">👁 Lihat</button>` : ''}
                   ${state.isAdmin ? `
                     <button class="btn secondary small" data-upload-asli="${s.id}">📝 ${s.linkFileAsli ? 'Ganti' : 'Upload'} File Asli</button>
+                    ${s.linkFileAsli ? `<button class="btn danger small" data-delete-asli="${s.id}">🗑 Hapus</button>` : ''}
                     <input type="file" data-file-asli-input="${s.id}" accept=".doc,.docx,.odt,.rtf,application/pdf,.pdf" style="display:none;">
                   ` : (!s.linkFileAsli ? '<span class="sub">Belum ada</span>' : '')}
                 </div>
@@ -1664,6 +1675,7 @@ function renderInformasiSurat(){
                   ${s.linkHasilTindaklanjut ? `<button class="btn secondary small" data-preview-tindaklanjut="${s.id}">👁 Lihat</button>` : ''}
                   ${state.isAdmin ? `
                     <button class="btn secondary small" data-upload-tindaklanjut="${s.id}">📝 ${s.linkHasilTindaklanjut ? 'Ganti' : 'Upload'} File</button>
+                    ${s.linkHasilTindaklanjut ? `<button class="btn danger small" data-delete-tindaklanjut="${s.id}">🗑 Hapus</button>` : ''}
                     <input type="file" data-file-tindaklanjut-input="${s.id}" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.xls,.xlsx" style="display:none;">
                   ` : (!s.linkHasilTindaklanjut ? '<span class="sub">Belum ada</span>' : '')}
                 </div>
@@ -1757,6 +1769,42 @@ function renderInformasiSurat(){
     });
   });
 
+  // ========================
+  // FITUR HAPUS FILE DRIVE
+  // ========================
+  document.querySelectorAll('[data-delete-asli]').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      if(!confirm('Yakin ingin menghapus File Asli ini? File akan dihapus permanen dari Google Drive.')) return;
+      const id = btn.getAttribute('data-delete-asli');
+      const s = state.suratList.find(x => x.id === id);
+      if(!s) return;
+      btn.disabled = true; btn.textContent = '⏳...';
+      try {
+        if(s.fileIdAsli) await deleteFileFromDrive(s.fileIdAsli);
+        s.linkFileAsli = ''; s.fileIdAsli = '';
+        await saveSuratList();
+        render();
+      } catch(e) { alert('Gagal menghapus'); btn.disabled = false; btn.textContent = '🗑 Hapus'; }
+    });
+  });
+
+  document.querySelectorAll('[data-delete-tindaklanjut]').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      if(!confirm('Yakin ingin menghapus File Hasil Tindaklanjut ini? File akan dihapus permanen dari Google Drive.')) return;
+      const id = btn.getAttribute('data-delete-tindaklanjut');
+      const s = state.suratList.find(x => x.id === id);
+      if(!s) return;
+      btn.disabled = true; btn.textContent = '⏳...';
+      try {
+        if(s.fileIdHasilTindaklanjut) await deleteFileFromDrive(s.fileIdHasilTindaklanjut);
+        s.linkHasilTindaklanjut = ''; s.fileIdHasilTindaklanjut = ''; s.namaFileHasilTindaklanjut = '';
+        await saveSuratList();
+        render();
+      } catch(e) { alert('Gagal menghapus'); btn.disabled = false; btn.textContent = '🗑 Hapus'; }
+    });
+  });
+  // ========================
+
   document.querySelectorAll('[data-upload-asli]').forEach(btn => {
     const id = btn.getAttribute('data-upload-asli');
     const fileInput = document.querySelector(`[data-file-asli-input="${id}"]`);
@@ -1777,6 +1825,9 @@ function renderInformasiSurat(){
         const base64 = await fileToBase64(file);
         const result = await uploadFileToDrive(base64, file.name, 'surat', file.type || 'application/octet-stream');
         if(result.url){
+          // Jika sebelumnya ada file, hapus yang lama
+          if(s.fileIdAsli) await deleteFileFromDrive(s.fileIdAsli);
+          
           s.linkFileAsli = result.url;
           s.fileIdAsli = result.fileId || '';
           await saveSuratList();
@@ -1810,6 +1861,9 @@ function renderInformasiSurat(){
         const base64 = await fileToBase64(file);
         const result = await uploadFileToDrive(base64, file.name, 'tindaklanjut', file.type || 'application/octet-stream');
         if(result.url){
+          // Jika sebelumnya ada file, hapus yang lama
+          if(s.fileIdHasilTindaklanjut) await deleteFileFromDrive(s.fileIdHasilTindaklanjut);
+          
           s.linkHasilTindaklanjut = result.url;
           s.fileIdHasilTindaklanjut = result.fileId || '';
           s.namaFileHasilTindaklanjut = file.name;
